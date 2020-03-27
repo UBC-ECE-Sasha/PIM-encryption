@@ -1,4 +1,5 @@
 *.o
 *.sw[a-z]
 test.txt
+build/
 
