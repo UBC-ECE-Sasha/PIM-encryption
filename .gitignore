@@ -1,5 +1,7 @@
 *.o
 *.sw[a-z]
 test.txt
+test.txt.enc
+core
 build/
 
