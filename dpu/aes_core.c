@@ -42,7 +42,7 @@
  * the case here.
  */
 
-#include "aes_dpu.h"
+#include "aes_core.h"
 #include "aes_local.h"
 #include <assert.h>
 #include <stdlib.h>
