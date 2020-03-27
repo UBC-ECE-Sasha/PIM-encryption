@@ -9,22 +9,21 @@ define conf_filename
 endef
 CONF := $(call conf_filename,${NR_DPUS},${NR_TASKLETS})
 
-HOST_TARGET := ${BUILDDIR}/encryption_host
+HOST_TARGET := ${BUILDDIR}/encrypt
 DPU_TARGET := ${BUILDDIR}/encryption_dpu
 
 HOST_SOURCES := $(wildcard ${HOST_DIR}/*.c)
 DPU_SOURCES := $(wildcard ${DPU_DIR}/*.c)
 
-HOST_INCLUDES := $(wildcard includes/${HOST_DIR})
-DPU_INCLUDES := $(wildcard includes/${DPU_DIR})
+INCLUDES := include
 
 .PHONY: all clean test
 
 __dirs := $(shell mkdir -p ${BUILDDIR})
 
-COMMON_FLAGS := -Wall -Wextra -Werror -g
-HOST_FLAGS := ${COMMON_FLAGS} -I${HOST_INCLUDES} -std=c11 -O3 `dpu-pkg-config --cflags --libs dpu` -DNR_TASKLETS=${NR_TASKLETS} -DNR_DPUS=${NR_DPUS}
-DPU_FLAGS := ${COMMON_FLAGS} -I${DPU_INCLUDES} -O2 -DNR_TASKLETS=${NR_TASKLETS}
+COMMON_FLAGS := -Wall -Wextra -Werror -g -I${INCLUDES}
+HOST_FLAGS := ${COMMON_FLAGS} -std=c11 -O3 `dpu-pkg-config --cflags --libs dpu` -DNR_TASKLETS=${NR_TASKLETS} -DNR_DPUS=${NR_DPUS}
+DPU_FLAGS := ${COMMON_FLAGS} -O2 -DNR_TASKLETS=${NR_TASKLETS}
 
 all: ${HOST_TARGET} ${DPU_TARGET}
 
