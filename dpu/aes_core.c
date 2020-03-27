@@ -41,15 +41,11 @@
  * use where we're using them to implement the higher level EVP interface, as is
  * the case here.
  */
-//#include "deprecated.h"
 
 #include "aes_dpu.h"
-#include <assert.h>
-
-#include <stdlib.h>
-//#include "crypto.h"
-//#include "aes.h"
 #include "aes_local.h"
+#include <assert.h>
+#include <stdlib.h>
 
 #ifndef AES_ASM
 /*-

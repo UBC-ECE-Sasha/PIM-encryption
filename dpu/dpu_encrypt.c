@@ -1,4 +1,4 @@
-#include "aes_core.c"
+#include "aes_core.h"
 #include "aes_local.h"
 #include <mram.h>
 
