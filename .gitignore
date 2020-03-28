@@ -3,5 +3,7 @@
 test.txt
 test.txt.enc
 core
+tags
+.vimrc
 build/
 
