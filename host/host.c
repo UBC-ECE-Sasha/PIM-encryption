@@ -3,12 +3,12 @@
 #include <stdio.h>
 
 #ifndef DPU_BINARY
-#define DPU_BINARY "encrypt"
+#define DPU_BINARY "build/encryption_dpu"
 #endif
 
 #define BUFFER_SIZE 64 * 1024 * 1024 // 64M
 
-char buffer[BUFFER_SIZE];
+static char buffer[BUFFER_SIZE];
 
 int main(int argc, char **argv) {
   if (argc < 3) {
@@ -37,6 +37,18 @@ int main(int argc, char **argv) {
   size_t bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE,
                             plaintext_fp); // No size checking because we are
                                            // only supporting 64M files
+
+  struct dpu_set_t dpu_set;
+  uint32_t nr_of_dpus;
+
+  DPU_ASSERT(dpu_alloc(NR_DPUS, NULL, &dpu_set));
+  DPU_ASSERT(dpu_load(dpu_set, DPU_BINARY, NULL));
+
+  DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &nr_of_dpus));
+  printf("Allocated %d DPU(s)\n", nr_of_dpus);
+
+  DPU_ASSERT(dpu_free(dpu_set));
+
   size_t bytes_written =
       fwrite(buffer, sizeof(char), BUFFER_SIZE, ciphertext_fp);
 
