@@ -44,5 +44,5 @@ clean:
 	$(RM) -r $(BUILDDIR)
 
 test: all
-	./${HOST_TARGET}
+	./${HOST_TARGET} test.txt test.txt.enc
 
