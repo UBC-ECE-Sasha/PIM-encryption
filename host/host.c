@@ -46,6 +46,16 @@ int main(int argc, char **argv) {
   DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &nr_of_dpus));
   printf("Allocated %d DPU(s)\n", nr_of_dpus);
 
+  DPU_ASSERT(
+      dpu_copy_to(dpu_set, XSTR(DPU_BUFFER), 0, buffer, DPU_BUFFER_SIZE));
+  DPU_ASSERT(dpu_launch(dpu_set, DPU_SYNCHRONOUS));
+
+  struct dpu_set_t dpu;
+  DPU_FOREACH(dpu_set, dpu) {
+    DPU_ASSERT(
+        dpu_copy_from(dpu, XSTR(DPU_BUFFER), 0, buffer, DPU_BUFFER_SIZE));
+  }
+
   DPU_ASSERT(dpu_free(dpu_set));
 
   size_t bytes_written =
