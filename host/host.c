@@ -1,3 +1,4 @@
+#include "common.h"
 #include <assert.h>
 #include <dpu.h>
 #include <stdio.h>
@@ -6,9 +7,7 @@
 #define DPU_BINARY "build/encryption_dpu"
 #endif
 
-#define BUFFER_SIZE 64 * 1024 * 1024 // 64M
-
-static char buffer[BUFFER_SIZE];
+static char buffer[DPU_BUFFER_SIZE];
 
 int main(int argc, char **argv) {
   if (argc < 3) {
@@ -26,7 +25,7 @@ int main(int argc, char **argv) {
   fseek(plaintext_fp, 0L, SEEK_END);
   size_t input_size = ftell(plaintext_fp);
 
-  if (input_size != BUFFER_SIZE) {
+  if (input_size != DPU_BUFFER_SIZE) {
     printf("Error: input file's size is not equal to the buffer size\n");
     fclose(plaintext_fp);
     fclose(ciphertext_fp);
@@ -34,7 +33,7 @@ int main(int argc, char **argv) {
   }
   rewind(plaintext_fp);
 
-  size_t bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE,
+  size_t bytes_read = fread(buffer, sizeof(char), DPU_BUFFER_SIZE,
                             plaintext_fp); // No size checking because we are
                                            // only supporting 64M files
 
@@ -50,7 +49,7 @@ int main(int argc, char **argv) {
   DPU_ASSERT(dpu_free(dpu_set));
 
   size_t bytes_written =
-      fwrite(buffer, sizeof(char), BUFFER_SIZE, ciphertext_fp);
+      fwrite(buffer, sizeof(char), DPU_BUFFER_SIZE, ciphertext_fp);
 
   fclose(plaintext_fp);
   fclose(ciphertext_fp);
