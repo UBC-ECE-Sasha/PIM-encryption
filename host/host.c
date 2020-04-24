@@ -67,9 +67,13 @@ int main(int argc, char **argv) {
   DPU_ASSERT(dpu_launch(dpu_set, DPU_SYNCHRONOUS));
 
   struct dpu_set_t dpu;
+  uint32_t dpu_perfcount;
   DPU_FOREACH(dpu_set, dpu) {
     DPU_ASSERT(
         dpu_copy_from(dpu, XSTR(DPU_BUFFER), 0, buffer, DPU_BUFFER_SIZE));
+    dpu_copy_from(dpu, "dpu_perfcount", 0, &dpu_perfcount,
+                  sizeof(dpu_perfcount));
+    printf("Performance count: %d\n", dpu_perfcount);
   }
 
   DPU_ASSERT(dpu_free(dpu_set));

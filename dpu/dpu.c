@@ -2,16 +2,20 @@
 #include "aes_local.h"
 #include "common.h"
 #include <mram.h>
+#include <perfcounter.h>
 
 #define TRANSFER_SIZE 2048
 #define BLOCKS_PER_TRANSFER TRANSFER_SIZE / 16
 
 __dma_aligned unsigned char buf[TRANSFER_SIZE];
 __mram_noinit uint8_t DPU_BUFFER[DPU_BUFFER_SIZE];
+__host uint32_t dpu_perfcount;
 
 int main(void) {
   unsigned char key_buf[] = "hello world hello world";
   AES_KEY key;
+
+  perfcounter_config(COUNT_CYCLES, true);
 
 #ifndef DECRYPT
   AES_set_encrypt_key(key_buf, 128, &key);
@@ -30,6 +34,8 @@ int main(void) {
 #endif
   }
   mram_write(buf, DPU_BUFFER, TRANSFER_SIZE);
+
+  dpu_perfcount = (uint32_t)perfcounter_get();
 
   return 0;
 }
