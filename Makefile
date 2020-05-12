@@ -49,6 +49,3 @@ ctags: ${HOST_SOURCES} ${DPU_SOURCES} ${COMMON_SOURCES} ${COMMON_INCLUDES}
 clean:
 	$(RM) -r $(BUILDDIR)
 
-test: all
-	./test.sh ${HOST_TARGET}
-
