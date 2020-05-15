@@ -4,15 +4,12 @@
 #include <mram.h>
 #include <perfcounter.h>
 
-#define TRANSFER_SIZE 2048
-#define BLOCKS_PER_TRANSFER TRANSFER_SIZE / 16
-
 __dma_aligned unsigned char buf[TRANSFER_SIZE];
 __mram_noinit uint8_t DPU_BUFFER[DPU_BUFFER_SIZE];
 __host uint32_t dpu_perfcount;
 
 int main(void) {
-  unsigned char key_buf[] = "hello world hello world";
+  unsigned char key_buf[] = TEST_KEY;
   AES_KEY key;
 
   perfcounter_config(COUNT_CYCLES, true);

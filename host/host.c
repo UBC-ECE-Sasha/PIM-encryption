@@ -1,4 +1,5 @@
 #include "common.h"
+#include "tests.h"
 #include <assert.h>
 #include <dpu.h>
 #include <stdio.h>
@@ -19,6 +20,12 @@ int main() {
 
   // Add some test data to show that encryption is actually working
   strcpy(buffer, TEST_STRING);
+
+  unsigned char host_buffer[1024 * 1024];
+  unsigned char key[16];
+  memcpy(key, TEST_KEY, 16);
+
+  host_encrypt(key, host_buffer);
 
   struct dpu_set_t dpu_set;
   uint32_t nr_of_dpus;

@@ -7,4 +7,9 @@
 #define DPU_BUFFER dpu_mram_buffer
 #define DPU_BUFFER_SIZE 0x4000000
 
+#define TEST_KEY "hello world hello world"
+
+#define TRANSFER_SIZE 2048
+#define BLOCKS_PER_TRANSFER TRANSFER_SIZE / 16
+
 #endif /* !COMMON_H */
