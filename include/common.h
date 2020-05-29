@@ -12,4 +12,6 @@
 #define TRANSFER_SIZE 2048
 #define BLOCKS_PER_TRANSFER TRANSFER_SIZE / 16
 
+#define MRAM_SIZE (64 << 20)
+
 #endif /* !COMMON_H */

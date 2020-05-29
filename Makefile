@@ -2,7 +2,7 @@ DPU_DIR := dpu
 HOST_DIR := host
 COMMON_DIR := common
 BUILDDIR ?= build
-NR_TASKLETS ?= 1
+NR_TASKLETS ?= 2
 NR_DPUS ?= 1
 
 define conf_filename
@@ -26,7 +26,7 @@ __dirs := $(shell mkdir -p ${BUILDDIR})
 
 COMMON_FLAGS := -Wall -Wextra -Werror -g -I${COMMON_INCLUDES}
 HOST_FLAGS := ${COMMON_FLAGS} -std=c11 -O3 `dpu-pkg-config --cflags --libs dpu` -DNR_TASKLETS=${NR_TASKLETS} -DNR_DPUS=${NR_DPUS}
-DPU_FLAGS := ${COMMON_FLAGS} -O2 -DNR_TASKLETS=${NR_TASKLETS}
+DPU_FLAGS := ${COMMON_FLAGS} -O0 -DNR_TASKLETS=${NR_TASKLETS}
 
 all: ${HOST_TARGET} ${DPU_ENCRYPT_TARGET} ${DPU_DECRYPT_TARGET}
 

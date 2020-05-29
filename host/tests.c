@@ -26,5 +26,5 @@ void host_encrypt(unsigned char *key, unsigned char *data) {
     }
   }
 
-  printf("%ld\n", cycles_delta);
+  printf("Host cycles/block: %ld\n", cycles_delta);
 }

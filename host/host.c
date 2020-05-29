@@ -34,7 +34,8 @@ int main() {
   DPU_ASSERT(dpu_load(dpu_set, DPU_ENCRYPT_BINARY, NULL));
 
   DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &nr_of_dpus));
-  // printf("Allocated %d DPU(s)\n", nr_of_dpus);
+  printf("Allocated %d DPU(s)\n", nr_of_dpus);
+  printf("Plaintext : %s\n", buffer);
 
   DPU_ASSERT(
       dpu_copy_to(dpu_set, XSTR(DPU_BUFFER), 0, buffer, DPU_BUFFER_SIZE));
@@ -47,6 +48,19 @@ int main() {
         dpu_copy_from(dpu, XSTR(DPU_BUFFER), 0, buffer, DPU_BUFFER_SIZE));
     dpu_copy_from(dpu, "dpu_perfcount", 0, &dpu_perfcount,
                   sizeof(dpu_perfcount));
+    printf("Ciphertext: %s\n", buffer);
+    // printf("Performance count: %d\n", dpu_perfcount);
+  }
+
+  DPU_ASSERT(dpu_load(dpu_set, DPU_DECRYPT_BINARY, NULL));
+  DPU_ASSERT(dpu_launch(dpu_set, DPU_SYNCHRONOUS));
+
+  DPU_FOREACH(dpu_set, dpu) {
+    DPU_ASSERT(
+        dpu_copy_from(dpu, XSTR(DPU_BUFFER), 0, buffer, DPU_BUFFER_SIZE));
+    dpu_copy_from(dpu, "dpu_perfcount", 0, &dpu_perfcount,
+                  sizeof(dpu_perfcount));
+    printf("Plaintext : %s\n", buffer);
     // printf("Performance count: %d\n", dpu_perfcount);
   }
 
