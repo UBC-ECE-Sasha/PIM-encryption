@@ -2,7 +2,7 @@ DPU_DIR := dpu
 HOST_DIR := host
 COMMON_DIR := common
 BUILDDIR ?= build
-NR_TASKLETS ?= 16
+NR_TASKLETS ?= 17
 NR_DPUS ?= 1
 
 define conf_filename
