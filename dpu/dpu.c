@@ -41,7 +41,7 @@ int do_dma(void) {
   read_transfer_unit(current_location, &transfer_buffers[current_buffer]);
   barrier_wait(&buffer_barrier);
 
-  while (current_location < (__mram_ptr void *)MRAM_SIZE) {
+  while (current_location + TRANSFER_SIZE < (__mram_ptr void *)MRAM_SIZE) {
     read_transfer_unit(current_location + TRANSFER_SIZE,
                        &transfer_buffers[NEXT_BUFFER(current_buffer)]);
 
