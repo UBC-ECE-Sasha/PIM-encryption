@@ -29,7 +29,7 @@ int do_dma(void) {
   barrier_wait(&buffer_barrier);
 
   __mram_ptr void *current_location = DPU_BUFFER + TRANSFER_SIZE;
-  int current_buffer = 1;
+  unsigned int current_buffer = 1;
 
   // while (current_location < (__mram_ptr void *)MRAM_SIZE) {
   while (current_location < (__mram_ptr void *)2048) {
@@ -43,7 +43,7 @@ int do_dma(void) {
 
   done = 1;
   barrier_wait(&buffer_barrier);
-  int previous_buffer = (current_buffer - 1) % NR_BUFFERS;
+  unsigned int previous_buffer = (current_buffer - 1) % NR_BUFFERS;
   write_transfer_unit(&transfer_buffers[previous_buffer]);
 
   return 1;
