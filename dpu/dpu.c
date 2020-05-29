@@ -11,8 +11,18 @@
 #error "Not enough tasklets - requires at least two"
 #endif
 
+#if MRAM_SIZE % TRANSFER_SIZE != 0
+#error "Transfer size is misaligned with MRAM size"
+#endif
+
 #define NR_BUFFERS 2
-#define NR_CRYPTO_TASKLETS NR_TASKLETS - 1
+#define NEXT_BUFFER(current_buffer) ((current_buffer + 1) % NR_BUFFERS)
+#define PREV_BUFFER(current_buffer) ((current_buffer - 1) % NR_BUFFERS)
+
+#define NR_CRYPTO_TASKLETS (NR_TASKLETS - 1)
+#define CRYPTO_START_OFFSET                                                    \
+  ((me() - 1) * 16) // crypto tasklet 1 starts on block 0, crypto tasklet 2
+                    // starts on block 1...
 
 __mram_noinit uint8_t DPU_BUFFER[DPU_BUFFER_SIZE];
 __host uint32_t dpu_perfcount;
@@ -25,28 +35,27 @@ struct transfer_unit transfer_buffers[NR_BUFFERS];
 bool done = 0;
 
 int do_dma(void) {
-  read_transfer_unit(DPU_BUFFER, &transfer_buffers[0]);
+  unsigned int current_buffer = 0;
+  __mram_ptr void *current_location = DPU_BUFFER;
+
+  read_transfer_unit(current_location, &transfer_buffers[current_buffer]);
   barrier_wait(&buffer_barrier);
 
-  __mram_ptr void *current_location = DPU_BUFFER + TRANSFER_SIZE;
-  unsigned int current_buffer = 1;
-
-  // while (current_location < (__mram_ptr void *)MRAM_SIZE) {
-  while (current_location < (__mram_ptr void *)2048) {
-    read_transfer_unit(current_location, &transfer_buffers[current_buffer]);
-    current_location += TRANSFER_SIZE;
-    current_buffer = (current_buffer + 1) % NR_BUFFERS;
+  while (current_location < (__mram_ptr void *)MRAM_SIZE) {
+    read_transfer_unit(current_location + TRANSFER_SIZE,
+                       &transfer_buffers[NEXT_BUFFER(current_buffer)]);
 
     barrier_wait(&buffer_barrier);
     write_transfer_unit(&transfer_buffers[current_buffer]);
+    current_buffer = NEXT_BUFFER(current_buffer);
+    current_location += TRANSFER_SIZE;
   }
 
   done = 1;
   barrier_wait(&buffer_barrier);
-  unsigned int previous_buffer = (current_buffer - 1) % NR_BUFFERS;
-  write_transfer_unit(&transfer_buffers[previous_buffer]);
+  write_transfer_unit(&transfer_buffers[current_buffer]);
 
-  return 1;
+  return 0;
 }
 
 int do_crypto(void) {
@@ -59,9 +68,10 @@ int do_crypto(void) {
       return 0;
     }
 
-    void *start_block = transfer_buffers[current_buffer].data;
-    for (void *block_ptr = start_block; block_ptr < start_block + TRANSFER_SIZE;
-         block_ptr += 16) {
+    uint8_t *start_block = transfer_buffers[current_buffer].data;
+    for (uint8_t *block_ptr = start_block + CRYPTO_START_OFFSET;
+         block_ptr < start_block + TRANSFER_SIZE;
+         block_ptr += 16 * NR_CRYPTO_TASKLETS) {
 #ifndef DECRYPT
       AES_encrypt(block_ptr, block_ptr, &key);
 #else
