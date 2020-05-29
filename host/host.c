@@ -1,5 +1,6 @@
 #include "common.h"
 #include "tests.h"
+#include <sys/time.h>
 #include <assert.h>
 #include <dpu.h>
 #include <stdio.h>
@@ -27,6 +28,8 @@ int main() {
 
   host_encrypt(key, host_buffer);
 
+  struct timeval dpu_start, dpu_end;
+
   struct dpu_set_t dpu_set;
   uint32_t nr_of_dpus;
 
@@ -34,12 +37,17 @@ int main() {
   DPU_ASSERT(dpu_load(dpu_set, DPU_ENCRYPT_BINARY, NULL));
 
   DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &nr_of_dpus));
-  printf("Allocated %d DPU(s)\n", nr_of_dpus);
-  printf("Plaintext : %s\n", buffer);
+  printf("Using %4.d DPU(s) %2.d tasklets, ", nr_of_dpus, NR_TASKLETS);
+  //printf("Plaintext : %s\n", buffer);
 
   DPU_ASSERT(
       dpu_copy_to(dpu_set, XSTR(DPU_BUFFER), 0, buffer, DPU_BUFFER_SIZE));
+
+  gettimeofday(&dpu_start, NULL);
   DPU_ASSERT(dpu_launch(dpu_set, DPU_SYNCHRONOUS));
+  gettimeofday(&dpu_end, NULL);
+
+  printf("encryption took %3.2fs ", (double)(dpu_end.tv_sec - dpu_start.tv_sec) + (dpu_end.tv_usec - dpu_start.tv_usec) / 10E6);
 
   struct dpu_set_t dpu;
   uint32_t dpu_perfcount;
@@ -48,8 +56,8 @@ int main() {
         dpu_copy_from(dpu, XSTR(DPU_BUFFER), 0, buffer, DPU_BUFFER_SIZE));
     dpu_copy_from(dpu, "dpu_perfcount", 0, &dpu_perfcount,
                   sizeof(dpu_perfcount));
-    printf("Ciphertext: %s\n", buffer);
-    // printf("Performance count: %d\n", dpu_perfcount);
+    //printf("Ciphertext: %s\n", buffer);
+    printf("%10.d cycles\n", dpu_perfcount);
   }
 
   DPU_ASSERT(dpu_load(dpu_set, DPU_DECRYPT_BINARY, NULL));
@@ -60,8 +68,8 @@ int main() {
         dpu_copy_from(dpu, XSTR(DPU_BUFFER), 0, buffer, DPU_BUFFER_SIZE));
     dpu_copy_from(dpu, "dpu_perfcount", 0, &dpu_perfcount,
                   sizeof(dpu_perfcount));
-    printf("Plaintext : %s\n", buffer);
-    // printf("Performance count: %d\n", dpu_perfcount);
+    //printf("Plaintext : %s\n", buffer);
+    printf("Performance count: %d\n", dpu_perfcount);
   }
 
   DPU_ASSERT(dpu_free(dpu_set));

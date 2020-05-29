@@ -87,7 +87,10 @@ int do_crypto(void) {
 int main(void) {
 
   if (me() == 0) {
-    return do_dma();
+    perfcounter_config(COUNT_INSTRUCTIONS, true);
+    int status = do_dma();
+    dpu_perfcount = perfcounter_get();
+    return status;
   } else {
     if (me() == 1) {
 #ifndef DECRYPT
