@@ -27,7 +27,7 @@
 __mram_noinit uint8_t DPU_BUFFER[DPU_BUFFER_SIZE];
 __host uint32_t dpu_perfcount;
 
-unsigned char key_buf[] = TEST_KEY;
+__host unsigned char KEY_BUFFER[KEY_BUFFER_SIZE];
 AES_KEY key;
 
 BARRIER_INIT(buffer_barrier, NR_TASKLETS);
@@ -94,9 +94,9 @@ int main(void) {
   } else {
     if (me() == 1) {
 #ifndef DECRYPT
-      AES_set_encrypt_key(key_buf, 128, &key);
+      AES_set_encrypt_key(KEY_BUFFER, 128, &key);
 #else
-      AES_set_decrypt_key(key_buf, 128, &key);
+      AES_set_decrypt_key(KEY_BUFFER, 128, &key);
 #endif
     }
     return do_crypto();

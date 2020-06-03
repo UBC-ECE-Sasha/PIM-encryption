@@ -23,8 +23,8 @@ int main() {
   strcpy(buffer, TEST_STRING);
 
   unsigned char host_buffer[1024 * 1024];
-  unsigned char key[16];
-  memcpy(key, TEST_KEY, 16);
+  unsigned char key[KEY_BUFFER_SIZE];
+  memcpy(key, TEST_KEY, KEY_BUFFER_SIZE);
 
   host_encrypt(key, host_buffer);
 
@@ -35,6 +35,7 @@ int main() {
 
   DPU_ASSERT(dpu_alloc(NR_DPUS, NULL, &dpu_set));
   DPU_ASSERT(dpu_load(dpu_set, DPU_ENCRYPT_BINARY, NULL));
+  DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(KEY_BUFFER), 0, key, KEY_BUFFER_SIZE));
 
   DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &nr_of_dpus));
   printf("Using %4.d DPU(s) %2.d tasklets, ", nr_of_dpus, NR_TASKLETS);

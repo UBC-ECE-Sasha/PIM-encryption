@@ -7,6 +7,12 @@
 #define DPU_BUFFER dpu_mram_buffer
 #define DPU_BUFFER_SIZE 0x4000000
 
+#define KEY_BUFFER dpu_key_buffer
+#define KEY_BUFFER_SIZE AES_KEY_SIZE_BYTES
+
+#define AES_KEY_SIZE 128
+#define AES_KEY_SIZE_BYTES (AES_KEY_SIZE / 8)
+
 #define TEST_KEY "hello world hello world"
 
 #define TRANSFER_SIZE 2048
