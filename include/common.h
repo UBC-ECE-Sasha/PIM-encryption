@@ -5,7 +5,7 @@
 #define STR(x) #x
 
 #define DPU_BUFFER dpu_mram_buffer
-#define DPU_BUFFER_SIZE 0x4000000
+#define DPU_BUFFER_SIZE MRAM_SIZE
 
 #define KEY_BUFFER dpu_key_buffer
 #define KEY_BUFFER_SIZE AES_KEY_SIZE_BYTES
