@@ -78,6 +78,8 @@ int do_crypto(void) {
       AES_decrypt(block_ptr, block_ptr, &key);
 #endif
     }
+
+    current_buffer = NEXT_BUFFER(current_buffer);
   }
 
   // Should never reach here
