@@ -6,7 +6,7 @@
 #include <string.h>
 
 #define TESTDATA_FOREACH_BLOCK(block_var, index_var)                           \
-  for (unsigned long long block_var, index_var = 0;                            \
+  for (unsigned long long block_var = 0, index_var = 0;                        \
        block_var < (DPU_BUFFER_SIZE / sizeof(unsigned long long)) /            \
                        (16 / sizeof(unsigned long long));                      \
        block_var++, index_var += 16 / sizeof(unsigned long long))
@@ -28,7 +28,7 @@ int main() {
   TESTDATA_FOREACH_BLOCK(block, index) {
     if (buffer[index] == block) {
       printf(
-          "Validation error: Buffer block %lld (index %lld) is not encrypted",
+          "Validation error: Buffer block %lld (index %lld) is not encrypted\n",
           block, index);
       return 1;
     }
@@ -39,7 +39,7 @@ int main() {
   TESTDATA_FOREACH_BLOCK(block, index) {
     if (buffer[index] != block) {
       printf("Validation error: Buffer block %lld (index %lld) did not decrypt "
-             "to its original value (block value is %lld%lld, should be 0%lld)",
+             "to its original value (block value is %lld%lld, should be 0%lld)\n",
              block, index, buffer[index - 1], buffer[index], block);
       return 1;
     }
