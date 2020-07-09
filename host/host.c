@@ -4,16 +4,57 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define TESTDATA_FOREACH_BLOCK(block_var, index_var)                           \
   for (unsigned long long block_var = 0, index_var = 0;                        \
-       block_var < (DPU_BUFFER_SIZE / sizeof(unsigned long long)) /            \
+       block_var < (test_data_size / sizeof(unsigned long long)) /             \
                        (16 / sizeof(unsigned long long));                      \
        block_var++, index_var += 16 / sizeof(unsigned long long))
 
+#define USAGE "Usage: pimcrypto [data_length] [number_of_dpus]" \
+  "\n\ndata_length may not be 0, and may use K, M, or G to indicate units.\n" \
+  "number_of_dpus must be between 1 and the number of DPUs available on your system.\n"
+
 static unsigned long long buffer[DPU_BUFFER_SIZE / sizeof(unsigned long long)];
 
-int main() {
+int main(int argc, const char* argv[]) {
+
+  unsigned long test_data_size;
+  unsigned int nr_of_dpus;
+
+  if (argc == 1) {
+    test_data_size = 16 << 10; // 16KB - good for simulation
+    nr_of_dpus = 1;
+  } else if (argc == 3) {
+    char * unit;
+    test_data_size = strtol(argv[1], &unit, 0);
+
+    if (test_data_size == 0) {
+      printf(USAGE);
+      return 1;
+    }
+
+    switch (*unit) {
+      case '\0': break;
+      case 'K': test_data_size <<= 10; break;
+      case 'M': test_data_size <<= 20; break;
+      case 'G': test_data_size <<= 30; break;
+      default: printf(USAGE); return 1;
+    }
+
+    nr_of_dpus = atoi(argv[2]);
+
+    if (nr_of_dpus == 0) {
+      printf(USAGE);
+      return 1;
+    }
+  } else {
+    printf(USAGE);
+    return 1;
+  }
+
+  printf("Performing encryption with %lu bytes and %d DPUs\n\n", test_data_size, nr_of_dpus);
 
   TESTDATA_FOREACH_BLOCK(block, index) { buffer[index] = block; }
 
@@ -23,7 +64,7 @@ int main() {
 
   host_encrypt(key, host_buffer);
 
-  if (dpu_AES_ecb(buffer, buffer, DPU_BUFFER_SIZE, key, OP_ENCRYPT) == -1) {
+  if (dpu_AES_ecb(buffer, buffer, test_data_size, key, OP_ENCRYPT, nr_of_dpus) == -1) {
     printf("Encryption failed.\n");
   }
 
@@ -36,7 +77,7 @@ int main() {
     }
   }
 
-  if (dpu_AES_ecb(buffer, buffer, DPU_BUFFER_SIZE, key, OP_DECRYPT) == -1) {
+  if (dpu_AES_ecb(buffer, buffer, test_data_size, key, OP_DECRYPT, nr_of_dpus) == -1) {
     printf("Decryption failed.\n");
   }
 

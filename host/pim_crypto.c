@@ -13,7 +13,7 @@
 #endif
 
 int dpu_AES_ecb(const void *in, void *out, unsigned long length, const void *key,
-                int operation) {
+                int operation, unsigned int nr_of_dpus) {
 
   if (operation != OP_ENCRYPT && operation != OP_DECRYPT) {
     printf("Invalid operation\n");
@@ -28,43 +28,43 @@ int dpu_AES_ecb(const void *in, void *out, unsigned long length, const void *key
   struct timeval dpu_start, dpu_end;
 
   struct dpu_set_t dpu_set;
-  uint32_t nr_of_dpus;
+  uint32_t real_nr_dpus;
 
-#if NR_DPUS != 0
-  DPU_ASSERT(dpu_alloc(NR_DPUS, NULL, &dpu_set));
-#else
-  int nr_of_dpus_wanted = length / MIN_CHUNK_SIZE;
-  dpu_error_t error = dpu_alloc(nr_of_dpus_wanted, NULL, &dpu_set);
-
-  if (error == DPU_ERR_ALLOCATION) {
-    DPU_ASSERT(dpu_alloc(DPU_ALLOCATE_ALL, NULL, &dpu_set));
+  if (nr_of_dpus != 0) {
+    DPU_ASSERT(dpu_alloc(nr_of_dpus, NULL, &dpu_set));
   } else {
-    DPU_ASSERT(error);
-  }
-#endif
+    int nr_of_dpus_wanted = length / MIN_CHUNK_SIZE;
+    dpu_error_t error = dpu_alloc(nr_of_dpus_wanted, NULL, &dpu_set);
 
-  DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &nr_of_dpus));
-  int chunk_size = length / nr_of_dpus;
+    if (error == DPU_ERR_ALLOCATION) {
+      DPU_ASSERT(dpu_alloc(DPU_ALLOCATE_ALL, NULL, &dpu_set));
+    } else {
+      DPU_ASSERT(error);
+    }
+  }
+
+  DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &real_nr_dpus));
+  int chunk_size = length / real_nr_dpus;
 
   if (chunk_size > MRAM_SIZE) { // More data than will fit in MRAM
-    printf("Data does not fit in MRAM (%ld bytes into %d DPUs)\n", length, nr_of_dpus);
+    printf("Data does not fit in MRAM (%ld bytes into %d DPUs)\n", length, real_nr_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
 
   if (chunk_size % 128 != 0) { // Some blocks are not whole
-    printf("Length is not a multiple of block size when split across %d DPUs\n", nr_of_dpus);
+    printf("Length is not a multiple of block size when split across %d DPUs\n", real_nr_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
 
   if (length % chunk_size != 0) { // Data does not fit evenly onto DPUs
-    printf("%ld bytes cannot be split evenly across %d DPUs\n", length, nr_of_dpus);
+    printf("%ld bytes cannot be split evenly across %d DPUs\n", length, real_nr_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
 
-  printf("Using %4.d DPU(s) %2.d tasklets, ", nr_of_dpus, NR_TASKLETS);
+  printf("Using %4.d DPU(s) %2.d tasklets, ", real_nr_dpus, NR_TASKLETS);
 
   if (operation == OP_ENCRYPT) {
     DPU_ASSERT(dpu_load(dpu_set, DPU_ENCRYPT_BINARY, NULL));
