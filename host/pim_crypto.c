@@ -92,8 +92,7 @@ int dpu_AES_ecb(const void *in, void *out, unsigned int length, const void *key,
 
     dpu_copy_from(dpu, "dpu_perfcount", 0, &dpu_perfcount,
                   sizeof(dpu_perfcount));
-    printf("%10.ld cycles, checksum %u\n", dpu_perfcount,
-           *((unsigned int *)(out + offset)));
+    printf("%10.ld cycles\n", dpu_perfcount);
     surplus -= (surplus > 0) ? 128 : 0;
     offset += this_chunk_size;
   }
