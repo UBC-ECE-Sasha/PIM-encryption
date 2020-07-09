@@ -16,10 +16,12 @@ int dpu_AES_ecb(const void *in, void *out, unsigned int length, const void *key,
                 int operation) {
 
   if (operation != OP_ENCRYPT && operation != OP_DECRYPT) {
+    printf("Invalid operation\n");
     return -1;
   }
 
   if (length % 128 != 0) {
+    printf("Length is not a multiple of block size\n");
     return -1;
   }
 
@@ -42,8 +44,22 @@ int dpu_AES_ecb(const void *in, void *out, unsigned int length, const void *key,
 #endif
 
   DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &nr_of_dpus));
+  int chunk_size = length / nr_of_dpus;
 
-  if (length > MRAM_SIZE * nr_of_dpus) {
+  if (chunk_size > MRAM_SIZE) { // More data than will fit in MRAM
+    printf("Data does not fit in MRAM (%d bytes into %d DPUs)\n", length, nr_of_dpus);
+    DPU_ASSERT(dpu_free(dpu_set));
+    return -1;
+  }
+
+  if (chunk_size % 128 != 0) { // Some blocks are not whole
+    printf("Length is not a multiple of block size when split across %d DPUs\n", nr_of_dpus);
+    DPU_ASSERT(dpu_free(dpu_set));
+    return -1;
+  }
+
+  if (length % chunk_size != 0) { // Data does not fit evenly onto DPUs
+    printf("%d bytes cannot be split evenly across %d DPUs\n", length, nr_of_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
@@ -56,19 +72,14 @@ int dpu_AES_ecb(const void *in, void *out, unsigned int length, const void *key,
     DPU_ASSERT(dpu_load(dpu_set, DPU_DECRYPT_BINARY, NULL));
   }
 
-  int chunk_size = length / nr_of_dpus;
-  chunk_size -= chunk_size % 128;
-  int surplus = length - (chunk_size * nr_of_dpus);
   uint64_t offset = 0;
 
   struct dpu_set_t dpu;
   DPU_FOREACH(dpu_set, dpu) {
-    int this_chunk_size = chunk_size + ((surplus > 0) ? 128 : 0);
     DPU_ASSERT(
-        dpu_copy_to(dpu, XSTR(DPU_BUFFER), 0, in + offset, this_chunk_size));
+        dpu_copy_to(dpu, XSTR(DPU_BUFFER), 0, in + offset, chunk_size));
 
-    surplus -= (surplus > 0) ? 128 : 0;
-    offset += this_chunk_size;
+    offset += chunk_size;
   }
 
   DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(KEY_BUFFER), 0, key, KEY_BUFFER_SIZE));
@@ -83,18 +94,17 @@ int dpu_AES_ecb(const void *in, void *out, unsigned int length, const void *key,
              (dpu_end.tv_usec - dpu_start.tv_usec) / 10E6);
 
   uint64_t dpu_perfcount;
-  surplus = length - (chunk_size * nr_of_dpus);
   offset = 0;
+
   DPU_FOREACH(dpu_set, dpu) {
-    int this_chunk_size = chunk_size + ((surplus > 0) ? 128 : 0);
     DPU_ASSERT(
-        dpu_copy_from(dpu, XSTR(DPU_BUFFER), 0, out + offset, this_chunk_size));
+        dpu_copy_from(dpu, XSTR(DPU_BUFFER), 0, out + offset, chunk_size));
 
     dpu_copy_from(dpu, "dpu_perfcount", 0, &dpu_perfcount,
                   sizeof(dpu_perfcount));
     printf("%10.ld cycles\n", dpu_perfcount);
-    surplus -= (surplus > 0) ? 128 : 0;
-    offset += this_chunk_size;
+
+    offset += chunk_size;
   }
 
   DPU_ASSERT(dpu_free(dpu_set));

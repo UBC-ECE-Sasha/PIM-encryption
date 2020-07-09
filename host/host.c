@@ -23,7 +23,9 @@ int main() {
 
   host_encrypt(key, host_buffer);
 
-  dpu_AES_ecb(buffer, buffer, DPU_BUFFER_SIZE, key, OP_ENCRYPT);
+  if (dpu_AES_ecb(buffer, buffer, DPU_BUFFER_SIZE, key, OP_ENCRYPT) == -1) {
+    printf("Encryption failed.\n");
+  }
 
   TESTDATA_FOREACH_BLOCK(block, index) {
     if (buffer[index] == block) {
@@ -34,7 +36,9 @@ int main() {
     }
   }
 
-  dpu_AES_ecb(buffer, buffer, DPU_BUFFER_SIZE, key, OP_DECRYPT);
+  if (dpu_AES_ecb(buffer, buffer, DPU_BUFFER_SIZE, key, OP_DECRYPT) == -1) {
+    printf("Decryption failed.\n");
+  }
 
   TESTDATA_FOREACH_BLOCK(block, index) {
     if (buffer[index] != block) {
