@@ -25,7 +25,7 @@
                     // starts on block 1...
 
 __mram_noinit uint8_t DPU_BUFFER[DPU_BUFFER_SIZE];
-__host uint32_t dpu_perfcount;
+__host perfcounter_t dpu_perfcount;
 
 __host unsigned int DPU_DATA_SIZE;
 __host unsigned char KEY_BUFFER[KEY_BUFFER_SIZE];
