@@ -12,7 +12,7 @@
 #define DPU_DECRYPT_BINARY "build/dpu_decrypt"
 #endif
 
-int dpu_AES_ecb(const void *in, void *out, unsigned int length, const void *key,
+int dpu_AES_ecb(const void *in, void *out, unsigned long length, const void *key,
                 int operation) {
 
   if (operation != OP_ENCRYPT && operation != OP_DECRYPT) {
@@ -47,7 +47,7 @@ int dpu_AES_ecb(const void *in, void *out, unsigned int length, const void *key,
   int chunk_size = length / nr_of_dpus;
 
   if (chunk_size > MRAM_SIZE) { // More data than will fit in MRAM
-    printf("Data does not fit in MRAM (%d bytes into %d DPUs)\n", length, nr_of_dpus);
+    printf("Data does not fit in MRAM (%ld bytes into %d DPUs)\n", length, nr_of_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
@@ -59,7 +59,7 @@ int dpu_AES_ecb(const void *in, void *out, unsigned int length, const void *key,
   }
 
   if (length % chunk_size != 0) { // Data does not fit evenly onto DPUs
-    printf("%d bytes cannot be split evenly across %d DPUs\n", length, nr_of_dpus);
+    printf("%ld bytes cannot be split evenly across %d DPUs\n", length, nr_of_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }

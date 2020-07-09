@@ -6,7 +6,7 @@
 
 #define MIN_CHUNK_SIZE (2 << 20)
 
-int dpu_AES_ecb(const void *in, void *out, unsigned int length, const void *key,
+int dpu_AES_ecb(const void *in, void *out, unsigned long length, const void *key,
                 int operation);
 
 #endif /* !PIM_CRYPTO_H */
