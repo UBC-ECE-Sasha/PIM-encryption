@@ -95,7 +95,9 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
          (double)(dpu_end.tv_sec - dpu_start.tv_sec) +
              (dpu_end.tv_usec - dpu_start.tv_usec) / 10E6);
 
-  uint64_t dpu_perfcount;
+  uint64_t cycles_min = 0;
+  uint64_t cycles_max = 0;
+  uint64_t cycles_avg = 0;
   offset = 0;
 
   DPU_FOREACH(dpu_set, dpu) {
@@ -103,11 +105,18 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
 
     offset += chunk_size;
 
-    dpu_copy_from(dpu, "dpu_perfcount", 0, &dpu_perfcount,
-                  sizeof(dpu_perfcount));
-    printf("%10.ld cycles\n", dpu_perfcount);
+    uint64_t cycles;
+    dpu_copy_from(dpu, "dpu_perfcount", 0, &cycles,
+                  sizeof(cycles));
+
+    cycles_min = (cycles_min == 0) ? cycles : cycles_min;
+    cycles_min = (cycles_min < cycles) ? cycles_min : cycles;
+    cycles_max = (cycles_max > cycles) ? cycles_max : cycles;
+    cycles_avg += cycles;
   }
 
+  cycles_avg /= real_nr_dpus;
+  printf("%10.ld cycles avg, %10.ld cycles min, %10.ld cycles max\n", cycles_avg, cycles_min, cycles_max);
   dpu_push_xfer(dpu_set, DPU_XFER_FROM_DPU, XSTR(DPU_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
 
   DPU_ASSERT(dpu_free(dpu_set));
