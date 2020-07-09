@@ -12,7 +12,7 @@
 #define DPU_DECRYPT_BINARY "build/dpu_decrypt"
 #endif
 
-int dpu_AES_ecb(const void *in, void *out, unsigned long length, const void *key,
+int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
                 int operation, unsigned int nr_of_dpus) {
 
   if (operation != OP_ENCRYPT && operation != OP_DECRYPT) {
@@ -76,11 +76,12 @@ int dpu_AES_ecb(const void *in, void *out, unsigned long length, const void *key
 
   struct dpu_set_t dpu;
   DPU_FOREACH(dpu_set, dpu) {
-    DPU_ASSERT(
-        dpu_copy_to(dpu, XSTR(DPU_BUFFER), 0, in + offset, chunk_size));
+    DPU_ASSERT(dpu_prepare_xfer(dpu, in + offset));
 
     offset += chunk_size;
   }
+
+  dpu_push_xfer(dpu_set, DPU_XFER_TO_DPU, XSTR(DPU_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
 
   DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(KEY_BUFFER), 0, key, KEY_BUFFER_SIZE));
   DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(DPU_DATA_SIZE), 0, &chunk_size, sizeof(chunk_size)));
@@ -98,15 +99,16 @@ int dpu_AES_ecb(const void *in, void *out, unsigned long length, const void *key
   offset = 0;
 
   DPU_FOREACH(dpu_set, dpu) {
-    DPU_ASSERT(
-        dpu_copy_from(dpu, XSTR(DPU_BUFFER), 0, out + offset, chunk_size));
+    DPU_ASSERT(dpu_prepare_xfer(dpu, out + offset));
+
+    offset += chunk_size;
 
     dpu_copy_from(dpu, "dpu_perfcount", 0, &dpu_perfcount,
                   sizeof(dpu_perfcount));
     printf("%10.ld cycles\n", dpu_perfcount);
-
-    offset += chunk_size;
   }
+
+  dpu_push_xfer(dpu_set, DPU_XFER_FROM_DPU, XSTR(DPU_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
 
   DPU_ASSERT(dpu_free(dpu_set));
   return 0;
