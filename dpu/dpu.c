@@ -27,6 +27,7 @@
 __mram_noinit uint8_t DPU_BUFFER[DPU_BUFFER_SIZE];
 __host uint32_t dpu_perfcount;
 
+__host unsigned int DPU_DATA_SIZE;
 __host unsigned char KEY_BUFFER[KEY_BUFFER_SIZE];
 AES_KEY key;
 
@@ -37,11 +38,13 @@ bool done = 0;
 int do_dma(void) {
   unsigned int current_buffer = 0;
   __mram_ptr void *current_location = DPU_BUFFER;
+  __mram_ptr void *end_location = DPU_BUFFER + DPU_DATA_SIZE;
 
   read_transfer_unit(current_location, &transfer_buffers[current_buffer]);
   barrier_wait(&buffer_barrier); // current: encrypting, next: garbage
 
-  while (current_location + TRANSFER_SIZE < (__mram_ptr void *)MRAM_SIZE) { // end when next doesn't exist
+  while (current_location + TRANSFER_SIZE < (__mram_ptr void *)MRAM_SIZE &&
+      current_location < end_location) { // end when next doesn't exist, or we've encrypted all data
     read_transfer_unit(current_location + TRANSFER_SIZE,
                        &transfer_buffers[NEXT_BUFFER(current_buffer)]);
 

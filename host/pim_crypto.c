@@ -83,6 +83,7 @@ int dpu_AES_ecb(const void *in, void *out, unsigned long length, const void *key
   }
 
   DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(KEY_BUFFER), 0, key, KEY_BUFFER_SIZE));
+  DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(DPU_DATA_SIZE), 0, &chunk_size, sizeof(chunk_size)));
 
   gettimeofday(&dpu_start, NULL);
   DPU_ASSERT(dpu_launch(dpu_set, DPU_SYNCHRONOUS));

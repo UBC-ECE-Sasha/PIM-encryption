@@ -10,6 +10,8 @@
 #define KEY_BUFFER dpu_key_buffer
 #define KEY_BUFFER_SIZE AES_KEY_SIZE_BYTES
 
+#define DPU_DATA_SIZE dpu_data_size
+
 #define AES_KEY_SIZE 128
 #define AES_KEY_SIZE_BYTES (AES_KEY_SIZE / 8)
 
