@@ -1,6 +1,5 @@
 #include "common.h"
 #include "pim_crypto.h"
-#include "tests.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -58,11 +57,8 @@ int main(int argc, const char* argv[]) {
 
   TESTDATA_FOREACH_BLOCK(block, index) { buffer[index] = block; }
 
-  unsigned char host_buffer[1024 * 1024];
   unsigned char key[KEY_BUFFER_SIZE];
   memcpy(key, TEST_KEY, KEY_BUFFER_SIZE);
-
-  host_encrypt(key, host_buffer);
 
   if (dpu_AES_ecb(buffer, buffer, test_data_size, key, OP_ENCRYPT, nr_of_dpus) == -1) {
     printf("Encryption failed.\n");
