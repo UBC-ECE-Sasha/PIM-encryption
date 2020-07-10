@@ -150,7 +150,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
   // each consecutive measurement to the next index, plus another function
   // for processing and outputting everything.
 
-  MEASURE("Tasklets,DPUs,Operation,Data size,Allocation time,Loading time,Data copy in,Parameter copy in,Launch,Data copy out,Performance count copy out,Free DPUs,Performance count min, max, average\n");
+  //MEASURE("Tasklets,DPUs,Operation,Data size,Allocation time,Loading time,Data copy in,Parameter copy in,Launch,Data copy out,Performance count copy out,Free DPUs,Performance count min, max, average\n");
   double times_adjusted[9];
 
   for (int i = 1; i < 9; i++) {
