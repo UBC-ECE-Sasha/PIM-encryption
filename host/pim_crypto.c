@@ -16,12 +16,12 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
                 int operation, unsigned int nr_of_dpus) {
 
   if (operation != OP_ENCRYPT && operation != OP_DECRYPT) {
-    printf("Invalid operation\n");
+    ERROR("Invalid operation\n");
     return -1;
   }
 
   if (length % 128 != 0) {
-    printf("Length is not a multiple of block size\n");
+    ERROR("Length is not a multiple of block size\n");
     return -1;
   }
 
@@ -47,24 +47,24 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
   int chunk_size = length / real_nr_dpus;
 
   if (chunk_size > MRAM_SIZE) { // More data than will fit in MRAM
-    printf("Data does not fit in MRAM (%ld bytes into %d DPUs)\n", length, real_nr_dpus);
+    ERROR("Data does not fit in MRAM (%ld bytes into %d DPUs)\n", length, real_nr_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
 
   if (chunk_size % 128 != 0) { // Some blocks are not whole
-    printf("Length is not a multiple of block size when split across %d DPUs\n", real_nr_dpus);
+    ERROR("Length is not a multiple of block size when split across %d DPUs\n", real_nr_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
 
   if (length % chunk_size != 0) { // Data does not fit evenly onto DPUs
-    printf("%ld bytes cannot be split evenly across %d DPUs\n", length, real_nr_dpus);
+    ERROR("%ld bytes cannot be split evenly across %d DPUs\n", length, real_nr_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
 
-  printf("Using %4.d DPU(s) %2.d tasklets, ", real_nr_dpus, NR_TASKLETS);
+  DEBUG("Using %4.d DPU(s) %2.d tasklets, ", real_nr_dpus, NR_TASKLETS);
 
   if (operation == OP_ENCRYPT) {
     DPU_ASSERT(dpu_load(dpu_set, DPU_ENCRYPT_BINARY, NULL));
@@ -90,7 +90,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
   DPU_ASSERT(dpu_launch(dpu_set, DPU_SYNCHRONOUS));
   gettimeofday(&dpu_end, NULL);
 
-  printf("%s took %3.2fs ",
+  DEBUG("%s took %3.2fs ",
          (operation == OP_ENCRYPT) ? "encryption" : "decryption",
          (double)(dpu_end.tv_sec - dpu_start.tv_sec) +
              (dpu_end.tv_usec - dpu_start.tv_usec) / 10E6);
@@ -116,7 +116,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
   }
 
   cycles_avg /= real_nr_dpus;
-  printf("%10.ld cycles avg, %10.ld cycles min, %10.ld cycles max\n", cycles_avg, cycles_min, cycles_max);
+  DEBUG("%10.ld cycles avg, %10.ld cycles min, %10.ld cycles max\n", cycles_avg, cycles_min, cycles_max);
   dpu_push_xfer(dpu_set, DPU_XFER_FROM_DPU, XSTR(DPU_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
 
   DPU_ASSERT(dpu_free(dpu_set));

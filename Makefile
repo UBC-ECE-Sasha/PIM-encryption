@@ -4,10 +4,12 @@ COMMON_DIR := common
 BUILDDIR ?= build
 NR_TASKLETS ?= 17
 NR_DPUS ?= 1
+EXPERIMENTDIR ?= experiment
 
 define conf_filename
 	${BUILDDIR}/.NR_DPUS_$(1)_NR_TASKLETS_$(2).conf
 endef
+
 CONF := $(call conf_filename,${NR_DPUS},${NR_TASKLETS})
 
 HOST_TARGET := ${BUILDDIR}/pimcrypto
@@ -20,13 +22,13 @@ COMMON_SOURCES := $(wildcard ${COMMON_DIR}/*.c)
 
 COMMON_INCLUDES := include
 
-.PHONY: all clean test
+.PHONY: all clean experiment
 
 __dirs := $(shell mkdir -p ${BUILDDIR})
 
 COMMON_FLAGS := -Wall -Wextra -Werror -g -I${COMMON_INCLUDES}
-HOST_FLAGS := ${COMMON_FLAGS} -std=c11 -O3 `dpu-pkg-config --cflags --libs dpu` -DNR_TASKLETS=${NR_TASKLETS} -DNR_DPUS=${NR_DPUS}
-DPU_FLAGS := ${COMMON_FLAGS} -O0 -DNR_TASKLETS=${NR_TASKLETS}
+HOST_FLAGS := ${COMMON_FLAGS} -std=c11 -O3 `dpu-pkg-config --cflags --libs dpu` -DNR_TASKLETS=${NR_TASKLETS} -DNR_DPUS=${NR_DPUS} ${EXPERIMENT}
+DPU_FLAGS := ${COMMON_FLAGS} -O0 -DNR_TASKLETS=${NR_TASKLETS} ${EXPERIMENT}
 
 all: ${HOST_TARGET} ${DPU_ENCRYPT_TARGET} ${DPU_DECRYPT_TARGET}
 
@@ -42,6 +44,10 @@ ${DPU_ENCRYPT_TARGET}: ${DPU_SOURCES} ${COMMON_SOURCES} ${COMMON_INCLUDES} ${CON
 
 ${DPU_DECRYPT_TARGET}: ${DPU_SOURCES} ${COMMON_SOURCES} ${COMMON_INCLUDES} ${CONF}
 	dpu-upmem-dpurte-clang ${DPU_FLAGS} -DDECRYPT -o $@ ${DPU_SOURCES} ${COMMON_SOURCES}
+
+experiment:
+	$(RM) -r $(EXPERIMENTDIR)
+	EXPERIMENT="-DEXPERIMENT" BUILDDIR=${EXPERIMENTDIR} NR_TASKLETS=${NR_TASKLETS} $(MAKE)
 
 ctags: ${HOST_SOURCES} ${DPU_SOURCES} ${COMMON_SOURCES} ${COMMON_INCLUDES}
 	ctags ${HOST_SOURCES} ${DPU_SOURCES} ${COMMON_SOURCES} $(wildcard ${COMMON_INCLUDES}/*.h)

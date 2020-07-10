@@ -22,4 +22,15 @@
 
 #define MRAM_SIZE (64 << 20)
 
+#ifndef EXPERIMENT
+#  define DEBUG(fmt, ...) printf(fmt, ##__VA_ARGS__)
+#  define MEASURE(fmt, ...)
+#else
+#  define DEBUG(fmt, ...)
+#  define MEASURE(fmt, ...) printf(fmt, ##__VA_ARGS__)
+#endif
+
+#define ERROR(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__)
+
+
 #endif /* !COMMON_H */

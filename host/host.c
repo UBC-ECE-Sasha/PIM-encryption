@@ -30,7 +30,7 @@ int main(int argc, const char* argv[]) {
     test_data_size = strtol(argv[1], &unit, 0);
 
     if (test_data_size == 0) {
-      printf(USAGE);
+      ERROR(USAGE);
       return 1;
     }
 
@@ -39,21 +39,21 @@ int main(int argc, const char* argv[]) {
       case 'K': test_data_size <<= 10; break;
       case 'M': test_data_size <<= 20; break;
       case 'G': test_data_size <<= 30; break;
-      default: printf(USAGE); return 1;
+      default: ERROR(USAGE); return 1;
     }
 
     nr_of_dpus = atoi(argv[2]);
 
     if (nr_of_dpus == 0) {
-      printf(USAGE);
+      ERROR(USAGE);
       return 1;
     }
   } else {
-    printf(USAGE);
+    ERROR(USAGE);
     return 1;
   }
 
-  printf("Performing encryption with %lu bytes and %d DPUs\n\n", test_data_size, nr_of_dpus);
+  DEBUG("Performing encryption with %lu bytes and %d DPUs\n\n", test_data_size, nr_of_dpus);
 
   TESTDATA_FOREACH_BLOCK(block, index) { buffer[index] = block; }
 
@@ -61,12 +61,12 @@ int main(int argc, const char* argv[]) {
   memcpy(key, TEST_KEY, KEY_BUFFER_SIZE);
 
   if (dpu_AES_ecb(buffer, buffer, test_data_size, key, OP_ENCRYPT, nr_of_dpus) == -1) {
-    printf("Encryption failed.\n");
+    ERROR("Encryption failed.\n");
   }
 
   TESTDATA_FOREACH_BLOCK(block, index) {
     if (buffer[index] == block) {
-      printf(
+      ERROR(
           "Validation error: Buffer block %lld (index %lld) is not encrypted\n",
           block, index);
       return 1;
@@ -74,12 +74,12 @@ int main(int argc, const char* argv[]) {
   }
 
   if (dpu_AES_ecb(buffer, buffer, test_data_size, key, OP_DECRYPT, nr_of_dpus) == -1) {
-    printf("Decryption failed.\n");
+    ERROR("Decryption failed.\n");
   }
 
   TESTDATA_FOREACH_BLOCK(block, index) {
     if (buffer[index] != block) {
-      printf("Validation error: Buffer block %lld (index %lld) did not decrypt "
+      ERROR("Validation error: Buffer block %lld (index %lld) did not decrypt "
              "to its original value (block value is %lld%lld, should be 0%lld)\n",
              block, index, buffer[index - 1], buffer[index], block);
       return 1;
