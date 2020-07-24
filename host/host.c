@@ -76,7 +76,7 @@ int main(int argc, const char* argv[]) {
       return 1;
     }
   }
-
+/*
   if (dpu_AES_ecb(buffer, buffer, test_data_size, key, OP_DECRYPT, nr_of_dpus) == -1) {
     ERROR("Decryption failed.\n");
   }
@@ -89,6 +89,7 @@ int main(int argc, const char* argv[]) {
       return 1;
     }
   }
+*/
 
   free(buffer);
   return 0;
