@@ -4,14 +4,6 @@
 #include <stdio.h>
 #include <time.h>
 
-#ifndef DPU_ENCRYPT_BINARY
-#define DPU_ENCRYPT_BINARY "build/dpu_encrypt"
-#endif
-
-#ifndef DPU_DECRYPT_BINARY
-#define DPU_DECRYPT_BINARY "build/dpu_decrypt"
-#endif
-
 int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
                 int operation, unsigned int nr_of_dpus) {
 
