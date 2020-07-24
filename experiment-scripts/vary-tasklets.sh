@@ -13,6 +13,7 @@ echo "Tasklets,DPUs,Operation,Data size,Allocation time,Loading time,Data" \
 
 for tasklets in {2..24}
 do
+	echo "Testing with $tasklets tasklets..."
 	NR_TASKLETS=$tasklets make experiment > /dev/null
 	./experiment/pimcrypto 64M 1 >> $data_file
 done
