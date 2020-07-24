@@ -7,4 +7,5 @@ tags
 .vimrc
 build/
 experiment/
+data/
 
