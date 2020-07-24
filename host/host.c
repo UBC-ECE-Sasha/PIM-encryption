@@ -15,8 +15,6 @@
   "\n\ndata_length may not be 0, and may use K, M, or G to indicate units.\n" \
   "number_of_dpus must be between 1 and the number of DPUs available on your system.\n"
 
-static unsigned long long buffer[DPU_BUFFER_SIZE / sizeof(unsigned long long)];
-
 int main(int argc, const char* argv[]) {
 
   unsigned long test_data_size;
@@ -55,6 +53,12 @@ int main(int argc, const char* argv[]) {
 
   DEBUG("Performing encryption with %lu bytes and %d DPUs\n\n", test_data_size, nr_of_dpus);
 
+  unsigned long long * buffer = malloc(test_data_size);
+  if (buffer == NULL) {
+    ERROR("Could not allocate test data buffer.\n");
+    exit(1);
+  }
+
   TESTDATA_FOREACH_BLOCK(block, index) { buffer[index] = block; }
 
   unsigned char key[KEY_BUFFER_SIZE];
@@ -86,5 +90,6 @@ int main(int argc, const char* argv[]) {
     }
   }
 
+  free(buffer);
   return 0;
 }
