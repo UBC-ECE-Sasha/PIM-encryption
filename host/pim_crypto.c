@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <time.h>
 
+#define TIMESPEC_DIFF(t1, t2) ((double)(t2.tv_sec - t1.tv_sec) + (double)(t2.tv_nsec - t1.tv_nsec)/10E9)
+
 int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
                 int operation, unsigned int nr_of_dpus) {
 
@@ -17,12 +19,12 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
     return -1;
   }
 
-  clock_t times[9];
+  struct timespec times[9];
 
   struct dpu_set_t dpu_set;
   uint32_t real_nr_dpus;
 
-  times[0] = clock(); // start
+  clock_gettime(CLOCK_MONOTONIC_RAW, times); // start
 
   if (nr_of_dpus != 0) {
     DPU_ASSERT(dpu_alloc(nr_of_dpus, NULL, &dpu_set));
@@ -37,7 +39,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
     }
   }
 
-  times[1] = clock(); // DPUs allocated
+  clock_gettime(CLOCK_MONOTONIC_RAW, times+1); // DPUs allocated
 
   DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &real_nr_dpus));
   int chunk_size = length / real_nr_dpus;
@@ -68,7 +70,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
     DPU_ASSERT(dpu_load(dpu_set, DPU_DECRYPT_BINARY, NULL));
   }
 
-  times[2] = clock(); // DPUs loaded
+  clock_gettime(CLOCK_MONOTONIC_RAW, times+2); // DPUs loaded
 
   uint64_t offset = 0;
 
@@ -81,20 +83,20 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
 
   dpu_push_xfer(dpu_set, DPU_XFER_TO_DPU, XSTR(DPU_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
 
-  times[3] = clock(); // Data transferred to DPUs
+  clock_gettime(CLOCK_MONOTONIC_RAW, times+3); // Data transferred to DPUs
 
   DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(KEY_BUFFER), 0, key, KEY_BUFFER_SIZE));
   DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(DPU_DATA_SIZE), 0, &chunk_size, sizeof(chunk_size)));
 
-  times[4] = clock(); // Key and data size copied to DPUs
+  clock_gettime(CLOCK_MONOTONIC_RAW, times+4); // Key and data size copied to DPUs
 
   DPU_ASSERT(dpu_launch(dpu_set, DPU_SYNCHRONOUS));
 
-  times[5] = clock(); // DPUs launched, data encrypted
+  clock_gettime(CLOCK_MONOTONIC_RAW, times+5); // DPUs launched, data encrypted
 
   DEBUG("%s took %3.2fs ",
          (operation == OP_ENCRYPT) ? "encryption" : "decryption",
-         ((double) (times[5] - times[0])) / CLOCKS_PER_SEC);
+         TIMESPEC_DIFF(times[0], times[5]) );
 
   uint64_t cycles_min = 0;
   uint64_t cycles_max = 0;
@@ -109,7 +111,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
 
   dpu_push_xfer(dpu_set, DPU_XFER_FROM_DPU, XSTR(DPU_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
 
-  times[6] = clock(); // Encrypted data copied from DPUs
+  clock_gettime(CLOCK_MONOTONIC_RAW, times+6); // Encrypted data copied from DPUs
 
   DPU_FOREACH(dpu_set, dpu) {
     uint64_t cycles;
@@ -125,11 +127,11 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
   cycles_avg /= real_nr_dpus;
   DEBUG("%10.ld cycles avg, %10.ld cycles min, %10.ld cycles max\n", cycles_avg, cycles_min, cycles_max);
 
-  times[7] = clock(); // Performance counts retrieved
+  clock_gettime(CLOCK_MONOTONIC_RAW, times+7); // Performance counts retrieved
 
   DPU_ASSERT(dpu_free(dpu_set));
 
-  times[8] = clock(); // DPUs freed
+  clock_gettime(CLOCK_MONOTONIC_RAW, times+8); // DPUs freed
 
   // Parse and output the data for experiments
   // 
@@ -143,14 +145,15 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
   // for processing and outputting everything.
 
   //MEASURE("Tasklets,DPUs,Operation,Data size,Allocation time,Loading time,Data copy in,Parameter copy in,Launch,Data copy out,Performance count copy out,Free DPUs,Performance count min, max, average\n");
+  
+#ifdef EXPERIMENT
   double times_adjusted[9];
-
   for (int i = 1; i < 9; i++) {
-    times_adjusted[i] = (double)(times[i] - times[i-1]);
-    times_adjusted[i] /= CLOCKS_PER_SEC;
+    times_adjusted[i] = TIMESPEC_DIFF(times[i-1], times[i]);
   }
 
   MEASURE("%d,%d,%d,%ld,%f,%f,%f,%f,%f,%f,%f,%f,%ld,%ld,%ld\n", NR_TASKLETS, real_nr_dpus, operation, length, times_adjusted[1], times_adjusted[2], times_adjusted[3], times_adjusted[4], times_adjusted[5], times_adjusted[6], times_adjusted[7], times_adjusted[8], cycles_min, cycles_max, cycles_avg);
+#endif
 
   return 0;
 }
