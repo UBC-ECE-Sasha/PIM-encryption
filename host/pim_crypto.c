@@ -1,11 +1,10 @@
 #include "pim_crypto.h"
 #include "common.h"
 #include "PIM-common/common/include/common.h"
+#include "PIM-common/host/include/host.h"
 #include <dpu.h>
 #include <stdio.h>
 #include <time.h>
-
-#define TIMESPEC_DIFF(t1, t2) ((double)(t2.tv_sec - t1.tv_sec) + (double)(t2.tv_nsec - t1.tv_nsec)/10E9)
 
 int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
                 int operation, unsigned int nr_of_dpus) {
@@ -97,7 +96,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
 
   DEBUG("%s took %3.2fs ",
          (operation == OP_ENCRYPT) ? "encryption" : "decryption",
-         TIMESPEC_DIFF(times[0], times[5]) );
+         TIME_DIFFERENCE(times[0], times[5]) );
 
   uint64_t cycles_min = 0;
   uint64_t cycles_max = 0;
@@ -150,7 +149,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
 #ifdef EXPERIMENT
   double times_adjusted[9];
   for (int i = 1; i < 9; i++) {
-    times_adjusted[i] = TIMESPEC_DIFF(times[i-1], times[i]);
+    times_adjusted[i] = TIME_DIFFERENCE(times[i-1], times[i]);
   }
 
   MEASURE("%d,%d,%d,%ld,%f,%f,%f,%f,%f,%f,%f,%f,%ld,%ld,%ld\n", NR_TASKLETS, real_nr_dpus, operation, length, times_adjusted[1], times_adjusted[2], times_adjusted[3], times_adjusted[4], times_adjusted[5], times_adjusted[6], times_adjusted[7], times_adjusted[8], cycles_min, cycles_max, cycles_avg);
