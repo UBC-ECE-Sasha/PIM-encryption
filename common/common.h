@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include "PIM-common/common/include/common.h"
+
 #define XSTR(x) STR(x)
 #define STR(x) #x
 
@@ -19,8 +21,6 @@
 
 #define TRANSFER_SIZE 2048
 #define BLOCKS_PER_TRANSFER TRANSFER_SIZE / 16
-
-#define MRAM_SIZE (64 << 20)
 
 #ifndef EXPERIMENT
 #  define DEBUG(fmt, ...) printf(fmt, ##__VA_ARGS__)
