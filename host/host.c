@@ -22,7 +22,7 @@ int main(int argc, const char* argv[]) {
   unsigned int nr_of_dpus;
 
   if (argc == 1) {
-    test_data_size = 16 << 10; // 16KB - good for simulation
+    test_data_size = KILOBYTE(16); // good for simulation
     nr_of_dpus = 1;
   } else if (argc == 3) {
     char * unit;
@@ -35,9 +35,9 @@ int main(int argc, const char* argv[]) {
 
     switch (*unit) {
       case '\0': break;
-      case 'K': test_data_size <<= 10; break;
-      case 'M': test_data_size <<= 20; break;
-      case 'G': test_data_size <<= 30; break;
+      case 'K': test_data_size = KILOBYTE(test_data_size); break;
+      case 'M': test_data_size = MEGABYTE(test_data_size); break;
+      case 'G': test_data_size = GIGABYTE(test_data_size); break;
       default: ERROR(USAGE); return 1;
     }
 
