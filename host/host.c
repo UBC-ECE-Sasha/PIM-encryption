@@ -6,11 +6,13 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define LONGS_PER_AES_BLOCK (AES_BLOCK_SIZE_BYTES / sizeof(unsigned long long))
+
 #define TESTDATA_FOREACH_BLOCK(block_var, index_var)                           \
   for (unsigned long long block_var = 0, index_var = 0;                        \
        block_var < (test_data_size / sizeof(unsigned long long)) /             \
-                       (16 / sizeof(unsigned long long));                      \
-       block_var++, index_var += 16 / sizeof(unsigned long long))
+                       (LONGS_PER_AES_BLOCK);    \
+       block_var++, index_var += LONGS_PER_AES_BLOCK)
 
 #define USAGE "Usage: pimcrypto [data_length] [number_of_dpus]" \
   "\n\ndata_length may not be 0, and may use K, M, or G to indicate units.\n" \

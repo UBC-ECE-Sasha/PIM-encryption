@@ -14,7 +14,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
     return -1;
   }
 
-  if (length % 128 != 0) {
+  if (length % AES_BLOCK_SIZE_BYTES != 0) {
     ERROR("Length is not a multiple of block size\n");
     return -1;
   }
@@ -50,7 +50,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
     return -1;
   }
 
-  if (chunk_size % 128 != 0) { // Some blocks are not whole
+  if (chunk_size % AES_BLOCK_SIZE_BYTES != 0) { // Some blocks are not whole
     ERROR("Length is not a multiple of block size when split across %d DPUs\n", real_nr_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;

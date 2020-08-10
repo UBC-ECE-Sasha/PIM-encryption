@@ -21,8 +21,9 @@
 
 #define NR_CRYPTO_TASKLETS (NR_TASKLETS - 1)
 #define CRYPTO_START_OFFSET                                                    \
-  ((me() - 1) * 16) // crypto tasklet 1 starts on block 0, crypto tasklet 2
+  ((me() - 1) * AES_BLOCK_SIZE_BYTES) // crypto tasklet 1 starts on block 0, crypto tasklet 2
                     // starts on block 1...
+#define CRYPTO_INTERVAL (NR_CRYPTO_TASKLETS * AES_BLOCK_SIZE_BYTES)
 
 __mram_noinit uint8_t DPU_BUFFER[DPU_BUFFER_SIZE];
 __host perfcounter_t dpu_perfcount;
@@ -74,7 +75,7 @@ int do_crypto(void) {
     uint8_t *start_block = transfer_buffers[current_buffer].data;
     for (uint8_t *block_ptr = start_block + CRYPTO_START_OFFSET;
          block_ptr < start_block + TRANSFER_SIZE;
-         block_ptr += 16 * NR_CRYPTO_TASKLETS) {
+         block_ptr += CRYPTO_INTERVAL) {
 #ifndef DECRYPT
       AES_encrypt(block_ptr, block_ptr, &key);
 #else
