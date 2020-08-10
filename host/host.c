@@ -6,14 +6,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define LONGS_PER_AES_BLOCK (AES_BLOCK_SIZE_BYTES / sizeof(unsigned long long))
-
-#define TESTDATA_FOREACH_BLOCK(block_var, index_var)                           \
-  for (unsigned long long block_var = 0, index_var = 0;                        \
-       block_var < (test_data_size / sizeof(unsigned long long)) /             \
-                       (LONGS_PER_AES_BLOCK);    \
-       block_var++, index_var += LONGS_PER_AES_BLOCK)
-
 #define USAGE "Usage: pimcrypto [data_length] [number_of_dpus]" \
   "\n\ndata_length may not be 0, and may use K, M, or G to indicate units.\n" \
   "number_of_dpus must be between 1 and the number of DPUs available on your system.\n"
@@ -62,7 +54,12 @@ int main(int argc, const char* argv[]) {
     exit(1);
   }
 
-  TESTDATA_FOREACH_BLOCK(block, index) { buffer[index] = block; }
+  // This sets up test data - after encryption, it's verified by checking that no element
+  // in the buffer held its original value. After decryption, it's verified again by checking
+  // that all elements have returned to their original values.
+  for (unsigned long long index = 0; index < test_data_size / sizeof(unsigned long long); index++) {
+    buffer[index] = index;
+  }
 
   unsigned char key[KEY_BUFFER_SIZE];
   memcpy(key, TEST_KEY, KEY_BUFFER_SIZE);
@@ -71,11 +68,9 @@ int main(int argc, const char* argv[]) {
     ERROR("Encryption failed.\n");
   }
 
-  TESTDATA_FOREACH_BLOCK(block, index) {
-    if (buffer[index] == block) {
-      ERROR(
-          "Validation error: Buffer block %lld (index %lld) is not encrypted\n",
-          block, index);
+  for (unsigned long long index = 0; index < test_data_size / sizeof(unsigned long long); index++) {
+    if (buffer[index] == index) {
+      ERROR("Validation error: Index %lld of the buffer is not encrypted\n", index);
       return 1;
     }
   }
@@ -84,11 +79,11 @@ int main(int argc, const char* argv[]) {
     ERROR("Decryption failed.\n");
   }
 
-  TESTDATA_FOREACH_BLOCK(block, index) {
-    if (buffer[index] != block) {
-      ERROR("Validation error: Buffer block %lld (index %lld) did not decrypt "
-             "to its original value (block value is %lld%lld, should be 0%lld)\n",
-             block, index, buffer[index - 1], buffer[index], block);
+  for (unsigned long long index = 0; index < test_data_size / sizeof(unsigned long long); index++) {
+    if (buffer[index] != index) {
+      ERROR("Validation error: Index %lld of the buffer did not decrypt to its"
+             " original value (is %lld, should be %lld)\n",
+             index, buffer[index], index);
       return 1;
     }
   }
