@@ -30,8 +30,10 @@ int host_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
   double execution_time = TIME_DIFFERENCE(start, end);
 
   // TODO: add a cycle count
-  // Operation, Data size, Execution time
-  MEASURE("%d,%ld,%f\n", operation, length, execution_time);
+  // Header: "Mode,DPUs,Tasklets,Operation,Data size,Total time,Allocation time,Loading time,Data"
+  //         " copy in,Parameter copy in,Launch,Data copy out,Performance count copy"
+  //         " out,Free DPUs,Performance count min, max, average"
+  MEASURE("host,,,%ld,%f,%f,%f,%f,%f,%f,%f,%f,%f,%ld,%ld,%ld\n", /* mode_string */, real_nr_dpus, NR_TASKLETS, /* operation_string */, length, total_time, times_adjusted[1], times_adjusted[2], times_adjusted[3], times_adjusted[4], times_adjusted[5], times_adjusted[6], times_adjusted[7], times_adjusted[8], cycles_min, cycles_max, cycles_avg);
 
   DEBUG("%sed %ld bytes in %fs\n",
         (operation == OP_ENCRYPT) ? "Encrypt" : "Decrypt", length,

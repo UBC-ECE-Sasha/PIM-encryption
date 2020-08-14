@@ -13,7 +13,7 @@ data_size=16
 
 make experiment  > /dev/null
 
-while [ $data_size -le $((1 << 30)) ]
+while [ $data_size -le $((1 << 35)) ]
 do
 	echo "Testing with $data_size bytes on the host..."
 	./experiment/pimcrypto host encrypt $data_size >> $data_file

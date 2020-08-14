@@ -9,7 +9,7 @@
 
 data_file="data/vary_data_per_dpu.csv"
 
-echo "Tasklets,DPUs,Operation,Data size,Allocation time,Loading time,Data" \
+echo "Mode,DPUs,Tasklets,Operation,Data size,Total time,Allocation time,Loading time,Data" \
 " copy in,Parameter copy in,Launch,Data copy out,Performance count copy" \
 " out,Free DPUs,Performance count min, max, average" > $data_file
 

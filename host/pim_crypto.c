@@ -144,15 +144,19 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
   // each consecutive measurement to the next index, plus another function
   // for processing and outputting everything.
 
-  //MEASURE("Tasklets,DPUs,Operation,Data size,Allocation time,Loading time,Data copy in,Parameter copy in,Launch,Data copy out,Performance count copy out,Free DPUs,Performance count min, max, average\n");
-  
+  // Header: "Mode,DPUs,Tasklets,Operation,Data size,Total time,Allocation time,Loading time,Data"
+  //         " copy in,Parameter copy in,Launch,Data copy out,Performance count copy"
+  //         " out,Free DPUs,Performance count min, max, average"
+
 #ifdef EXPERIMENT
   double times_adjusted[9];
   for (int i = 1; i < 9; i++) {
     times_adjusted[i] = TIME_DIFFERENCE(times[i-1], times[i]);
   }
 
-  MEASURE("%d,%d,%d,%ld,%f,%f,%f,%f,%f,%f,%f,%f,%ld,%ld,%ld\n", NR_TASKLETS, real_nr_dpus, operation, length, times_adjusted[1], times_adjusted[2], times_adjusted[3], times_adjusted[4], times_adjusted[5], times_adjusted[6], times_adjusted[7], times_adjusted[8], cycles_min, cycles_max, cycles_avg);
+  double total_time = times_adjusted[1] + times_adjusted[2] + times_adjusted[3] + times_adjusted[4] + times_adjusted[5] + times_adjusted[6] + times_adjusted[7] + times_adjusted[8];
+
+  MEASURE("pim,%d,%d,%s,%ld,%f,%f,%f,%f,%f,%f,%f,%f,%f,%ld,%ld,%ld\n", real_nr_dpus, NR_TASKLETS, /* operation_string */, length, total_time, times_adjusted[1], times_adjusted[2], times_adjusted[3], times_adjusted[4], times_adjusted[5], times_adjusted[6], times_adjusted[7], times_adjusted[8], cycles_min, cycles_max, cycles_avg);
 #endif
 
   return 0;
