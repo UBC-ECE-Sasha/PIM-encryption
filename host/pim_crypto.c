@@ -81,12 +81,12 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
     offset += chunk_size;
   }
 
-  dpu_push_xfer(dpu_set, DPU_XFER_TO_DPU, XSTR(DPU_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
+  dpu_push_xfer(dpu_set, DPU_XFER_TO_DPU, XSTR(DPU_DATA_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times+3); // Data transferred to DPUs
 
-  DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(KEY_BUFFER), 0, key, KEY_BUFFER_SIZE));
-  DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(DPU_DATA_SIZE), 0, &chunk_size, sizeof(chunk_size)));
+  DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(DPU_KEY_BUFFER), 0, key, DPU_KEY_BUFFER_SIZE));
+  DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(DPU_LENGTH_BUFFER), 0, &chunk_size, sizeof(chunk_size)));
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times+4); // Key and data size copied to DPUs
 
@@ -109,7 +109,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
     offset += chunk_size;
   }
 
-  dpu_push_xfer(dpu_set, DPU_XFER_FROM_DPU, XSTR(DPU_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
+  dpu_push_xfer(dpu_set, DPU_XFER_FROM_DPU, XSTR(DPU_DATA_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times+6); // Encrypted data copied from DPUs
 

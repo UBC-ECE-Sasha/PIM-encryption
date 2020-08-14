@@ -25,11 +25,11 @@
                     // starts on block 1...
 #define CRYPTO_INTERVAL (NR_CRYPTO_TASKLETS * AES_BLOCK_SIZE_BYTES)
 
-__mram_noinit uint8_t DPU_BUFFER[DPU_BUFFER_SIZE];
+__mram_noinit uint8_t DPU_DATA_BUFFER[DPU_DATA_BUFFER_SIZE];
 __host perfcounter_t dpu_perfcount;
 
-__host unsigned int DPU_DATA_SIZE;
-__host unsigned char KEY_BUFFER[KEY_BUFFER_SIZE];
+__host unsigned int DPU_LENGTH_BUFFER;
+__host unsigned char DPU_KEY_BUFFER[DPU_KEY_BUFFER_SIZE];
 AES_KEY key;
 
 BARRIER_INIT(buffer_barrier, NR_TASKLETS);
@@ -38,8 +38,8 @@ bool done = 0;
 
 int do_dma(void) {
   unsigned int current_buffer = 0;
-  __mram_ptr void *current_location = DPU_BUFFER;
-  __mram_ptr void *end_location = DPU_BUFFER + DPU_DATA_SIZE;
+  __mram_ptr void *current_location = DPU_DATA_BUFFER;
+  __mram_ptr void *end_location = DPU_DATA_BUFFER + DPU_LENGTH_BUFFER;
 
   transfer_buffers[current_buffer].src = current_location;
   read_transfer_unit(&transfer_buffers[current_buffer]);
@@ -101,9 +101,9 @@ int main(void) {
   } else {
     if (me() == 1) {
 #ifndef DECRYPT
-      AES_set_encrypt_key(KEY_BUFFER, 128, &key);
+      AES_set_encrypt_key(DPU_KEY_BUFFER, 128, &key);
 #else
-      AES_set_decrypt_key(KEY_BUFFER, 128, &key);
+      AES_set_decrypt_key(DPU_KEY_BUFFER, 128, &key);
 #endif
     }
     return do_crypto();

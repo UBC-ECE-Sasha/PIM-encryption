@@ -6,13 +6,13 @@
 #define XSTR(x) STR(x)
 #define STR(x) #x
 
-#define DPU_BUFFER dpu_mram_buffer
-#define DPU_BUFFER_SIZE MRAM_SIZE
+// Define symbols for copying parameters and data to the DPU
+#define DPU_DATA_BUFFER dpu_mram
+#define DPU_KEY_BUFFER dpu_key
+#define DPU_LENGTH_BUFFER dpu_length
 
-#define KEY_BUFFER dpu_key_buffer
-#define KEY_BUFFER_SIZE AES_KEY_SIZE_BYTES
-
-#define DPU_DATA_SIZE dpu_data_size
+#define DPU_KEY_BUFFER_SIZE AES_KEY_SIZE_BYTES
+#define DPU_DATA_BUFFER_SIZE MRAM_SIZE
 
 #define AES_BLOCK_SIZE 128
 #define AES_BLOCK_SIZE_BYTES (AES_BLOCK_SIZE / 8)
@@ -20,7 +20,6 @@
 #define AES_KEY_SIZE 128
 #define AES_KEY_SIZE_BYTES (AES_KEY_SIZE / 8)
 
-#define TEST_KEY "hello world hello world"
 
 #define TRANSFER_SIZE 2048
 #define BLOCKS_PER_TRANSFER TRANSFER_SIZE / 16

@@ -10,6 +10,8 @@
 #define PIM_MODE 1
 #define HOST_MODE 2
 
+#define TEST_KEY "hello world hello world"
+
 #define USAGE                                                                  \
   "usage: %s\n"                                                                \
   "       %s dpu <number_of_dpus> <encrypt|decrypt> <data_length>\n"           \
@@ -125,8 +127,8 @@ int main(int argc, const char *argv[]) {
     exit(1);
   }
 
-  unsigned char key[KEY_BUFFER_SIZE];
-  memcpy(key, TEST_KEY, KEY_BUFFER_SIZE);
+  unsigned char key[DPU_KEY_BUFFER_SIZE];
+  memcpy(key, TEST_KEY, DPU_KEY_BUFFER_SIZE);
 
   int error;
 
