@@ -6,6 +6,12 @@
 #define XSTR(x) STR(x)
 #define STR(x) #x
 
+// Symbols configured by the makefile:
+// NR_TASKLETS    Number of tasklets
+// BULK           If defined, use push_xfer instead of dpu_copy_to
+// TRANSFER_SIZE  Size of transfers between MRAM and WRAM
+// PERFCOUNT_TYPE COUNT_CYCLES or COUNT_INSTRUCTIONS
+
 // Define symbols for copying parameters and data to the DPU
 #define DPU_DATA_BUFFER dpu_mram
 #define DPU_KEY_BUFFER dpu_key
@@ -20,8 +26,7 @@
 #define AES_KEY_SIZE 128
 #define AES_KEY_SIZE_BYTES (AES_KEY_SIZE / 8)
 
-
-#define TRANSFER_SIZE 2048
+// TRANSFER_SIZE should be set by the makefile
 #define BLOCKS_PER_TRANSFER TRANSFER_SIZE / 16
 
 #ifndef EXPERIMENT

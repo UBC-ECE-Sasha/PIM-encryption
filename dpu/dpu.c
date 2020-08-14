@@ -94,7 +94,7 @@ int do_crypto(void) {
 int main(void) {
 
   if (me() == 0) {
-    perfcounter_config(COUNT_INSTRUCTIONS, true);
+    perfcounter_config(PERFCOUNT_TYPE, true);
     int status = do_dma();
     dpu_perfcount = perfcounter_get();
     return status;

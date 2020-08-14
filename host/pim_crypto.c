@@ -76,12 +76,20 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
 
   struct dpu_set_t dpu;
   DPU_FOREACH(dpu_set, dpu) {
+
+#ifndef NOBULK
     DPU_ASSERT(dpu_prepare_xfer(dpu, in + offset));
+#else
+    DPU_ASSERT(
+        dpu_copy_to(dpu, XSTR(DPU_DATA_BUFFER), 0, in + offset, chunk_size));
+#endif
 
     offset += chunk_size;
   }
 
+#ifndef NOBULK
   dpu_push_xfer(dpu_set, DPU_XFER_TO_DPU, XSTR(DPU_DATA_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
+#endif
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times+3); // Data transferred to DPUs
 
@@ -98,34 +106,42 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
          (operation == OP_ENCRYPT) ? "encryption" : "decryption",
          TIME_DIFFERENCE(times[0], times[5]) );
 
-  uint64_t cycles_min = 0;
-  uint64_t cycles_max = 0;
-  uint64_t cycles_avg = 0;
+  uint64_t perfcount_min = 0;
+  uint64_t perfcount_max = 0;
+  uint64_t perfcount_avg = 0;
   offset = 0;
 
   DPU_FOREACH(dpu_set, dpu) {
+
+#ifndef NOBULK
     DPU_ASSERT(dpu_prepare_xfer(dpu, out + offset));
+#else
+    DPU_ASSERT(
+        dpu_copy_from(dpu, XSTR(DPU_DATA_BUFFER), 0, out + offset, chunk_size));
+#endif
 
     offset += chunk_size;
   }
 
+#ifndef NOBULK
   dpu_push_xfer(dpu_set, DPU_XFER_FROM_DPU, XSTR(DPU_DATA_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
+#endif
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times+6); // Encrypted data copied from DPUs
 
   DPU_FOREACH(dpu_set, dpu) {
-    uint64_t cycles;
-    dpu_copy_from(dpu, "dpu_perfcount", 0, &cycles,
-                  sizeof(cycles));
+    uint64_t perfcount;
+    dpu_copy_from(dpu, "dpu_perfcount", 0, &perfcount, sizeof(perfcount));
 
-    cycles_min = (cycles_min == 0) ? cycles : cycles_min;
-    cycles_min = (cycles_min < cycles) ? cycles_min : cycles;
-    cycles_max = (cycles_max > cycles) ? cycles_max : cycles;
-    cycles_avg += cycles;
+    perfcount_min = (perfcount_min == 0) ? perfcount : perfcount_min;
+    perfcount_min = (perfcount_min < perfcount) ? perfcount_min : perfcount;
+    perfcount_max = (perfcount_max > perfcount) ? perfcount_max : perfcount;
+    perfcount_avg += perfcount;
   }
 
-  cycles_avg /= real_nr_dpus;
-  DEBUG("%10.ld cycles avg, %10.ld cycles min, %10.ld cycles max\n", cycles_avg, cycles_min, cycles_max);
+  perfcount_avg /= real_nr_dpus;
+  DEBUG("Performance count %s %10.ld avg, %10.ld min, %10.ld max\n",
+        XSTR(PERFCOUNT_TYPE), perfcount_avg, perfcount_min, perfcount_max);
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times+7); // Performance counts retrieved
 
@@ -144,15 +160,22 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
   // each consecutive measurement to the next index, plus another function
   // for processing and outputting everything.
 
-  //MEASURE("Tasklets,DPUs,Operation,Data size,Allocation time,Loading time,Data copy in,Parameter copy in,Launch,Data copy out,Performance count copy out,Free DPUs,Performance count min, max, average\n");
-  
+  // MEASURE("Tasklets,DPUs,Operation,Data size,Allocation time,Loading
+  // time,Data copy in,Parameter copy in,Launch,Data copy out, Performance count
+  // copy out,Free DPUs,Performance count type,Performance count min, max,
+  // average\n");
+
 #ifdef EXPERIMENT
   double times_adjusted[9];
   for (int i = 1; i < 9; i++) {
     times_adjusted[i] = TIME_DIFFERENCE(times[i-1], times[i]);
   }
 
-  MEASURE("%d,%d,%d,%ld,%f,%f,%f,%f,%f,%f,%f,%f,%ld,%ld,%ld\n", NR_TASKLETS, real_nr_dpus, operation, length, times_adjusted[1], times_adjusted[2], times_adjusted[3], times_adjusted[4], times_adjusted[5], times_adjusted[6], times_adjusted[7], times_adjusted[8], cycles_min, cycles_max, cycles_avg);
+  MEASURE("%d,%d,%d,%ld,%f,%f,%f,%f,%f,%f,%f,%f,%s,%ld,%ld,%ld\n", NR_TASKLETS,
+          real_nr_dpus, operation, length, times_adjusted[1], times_adjusted[2],
+          times_adjusted[3], times_adjusted[4], times_adjusted[5],
+          times_adjusted[6], times_adjusted[7], times_adjusted[8],
+          XSTR(PERFCOUNT_TYPE), perfcount_min, perfcount_max, perfcount_avg);
 #endif
 
   return 0;
