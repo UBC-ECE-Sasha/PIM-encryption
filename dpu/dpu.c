@@ -101,9 +101,9 @@ int main(void) {
   } else {
     if (me() == 1) {
 #ifndef DECRYPT
-      AES_set_encrypt_key(DPU_KEY_BUFFER, 128, &key);
+      AES_set_encrypt_key(DPU_KEY_BUFFER, AES_KEY_SIZE, &key);
 #else
-      AES_set_decrypt_key(DPU_KEY_BUFFER, 128, &key);
+      AES_set_decrypt_key(DPU_KEY_BUFFER, AES_KEY_SIZE, &key);
 #endif
     }
     return do_crypto();
