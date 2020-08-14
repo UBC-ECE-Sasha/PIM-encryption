@@ -2,7 +2,7 @@ DPU_DIR := dpu
 HOST_DIR := host
 COMMON_DIR := common
 BUILDDIR ?= build
-NR_TASKLETS ?= 17
+NR_TASKLETS ?= 14
 EXPERIMENTDIR ?= experiment
 
 define conf_filename
