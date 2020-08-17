@@ -144,9 +144,9 @@ int main(int argc, const char *argv[]) {
     exit(1);
   }
 
-  if (error == -1) {
-    ERROR("Operation failed.\n");
-    exit(1);
+  if (error != 0) {
+    ERROR("Operation failed (errno %d)\n", error);
+    return 1;
   }
 
   free(buffer);
