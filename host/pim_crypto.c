@@ -22,47 +22,35 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
   struct timespec times[9];
 
   struct dpu_set_t dpu_set;
-  uint32_t real_nr_dpus;
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times); // start
 
-  if (nr_of_dpus != 0) {
-    DPU_ASSERT(dpu_alloc(nr_of_dpus, NULL, &dpu_set));
-  } else {
-    int nr_of_dpus_wanted = length / MIN_CHUNK_SIZE;
-    dpu_error_t error = dpu_alloc(nr_of_dpus_wanted, NULL, &dpu_set);
-
-    if (error == DPU_ERR_ALLOCATION) {
-      DPU_ASSERT(dpu_alloc(DPU_ALLOCATE_ALL, NULL, &dpu_set));
-    } else {
-      DPU_ASSERT(error);
-    }
-  }
+  DPU_ASSERT(dpu_alloc(nr_of_dpus, NULL, &dpu_set));
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times+1); // DPUs allocated
 
-  DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &real_nr_dpus));
-  int chunk_size = length / real_nr_dpus;
+  DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &nr_of_dpus));
+  int chunk_size = length / nr_of_dpus;
 
   if (chunk_size > MRAM_SIZE) { // More data than will fit in MRAM
-    ERROR("Data does not fit in MRAM (%ld bytes into %d DPUs)\n", length, real_nr_dpus);
+    ERROR("Data does not fit in MRAM (%ld bytes into %d DPUs)\n", length, nr_of_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
 
   if (chunk_size % AES_BLOCK_SIZE_BYTES != 0) { // Some blocks are not whole
-    ERROR("Length is not a multiple of block size when split across %d DPUs\n", real_nr_dpus);
+    ERROR("Length is not a multiple of block size when split across %d DPUs\n", nr_of_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
 
   if (length % chunk_size != 0) { // Data does not fit evenly onto DPUs
-    ERROR("%ld bytes cannot be split evenly across %d DPUs\n", length, real_nr_dpus);
+    ERROR("%ld bytes cannot be split evenly across %d DPUs\n", length, nr_of_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
 
-  DEBUG("Using %4.d DPU(s) %2.d tasklets, ", real_nr_dpus, NR_TASKLETS);
+  DEBUG("Using %4.d DPU(s) %2.d tasklets, ", nr_of_dpus, NR_TASKLETS);
 
   if (operation == OP_ENCRYPT) {
     DPU_ASSERT(dpu_load(dpu_set, DPU_ENCRYPT_BINARY, NULL));
@@ -139,7 +127,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
     perfcount_avg += perfcount;
   }
 
-  perfcount_avg /= real_nr_dpus;
+  perfcount_avg /= nr_of_dpus;
   DEBUG("Performance count %s %10.ld avg, %10.ld min, %10.ld max\n",
         XSTR(PERFCOUNT_TYPE), perfcount_avg, perfcount_min, perfcount_max);
 
@@ -172,7 +160,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
   }
 
   MEASURE("%d,%d,%d,%ld,%f,%f,%f,%f,%f,%f,%f,%f,%s,%ld,%ld,%ld\n", NR_TASKLETS,
-          real_nr_dpus, operation, length, times_adjusted[1], times_adjusted[2],
+          nr_of_dpus, operation, length, times_adjusted[1], times_adjusted[2],
           times_adjusted[3], times_adjusted[4], times_adjusted[5],
           times_adjusted[6], times_adjusted[7], times_adjusted[8],
           XSTR(PERFCOUNT_TYPE), perfcount_min, perfcount_max, perfcount_avg);
