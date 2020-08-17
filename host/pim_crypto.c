@@ -1,4 +1,4 @@
-#include "pim_crypto.h"
+#include "crypto.h"
 #include "common.h"
 #include "PIM-common/common/include/common.h"
 #include "PIM-common/host/include/host.h"
@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <time.h>
 
-int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
+int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
                 int operation, unsigned int nr_of_dpus) {
 
   if (operation != OP_ENCRYPT && operation != OP_DECRYPT) {
@@ -93,7 +93,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key,
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times+3); // Data transferred to DPUs
 
-  DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(DPU_KEY_BUFFER), 0, key, DPU_KEY_BUFFER_SIZE));
+  DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(DPU_KEY_BUFFER), 0, key_ptr, DPU_KEY_BUFFER_SIZE));
   DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(DPU_LENGTH_BUFFER), 0, &chunk_size, sizeof(chunk_size)));
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times+4); // Key and data size copied to DPUs

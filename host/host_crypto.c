@@ -1,9 +1,8 @@
-#include "host_crypto.h"
 #include "PIM-common/host/include/host.h"
 #include "aes_core.h"
 #include "aes_local.h"
 #include "common.h"
-#include "pim_crypto.h"
+#include "crypto.h"
 #include <stdio.h>
 #include <time.h>
 

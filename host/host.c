@@ -1,7 +1,6 @@
 #include "PIM-common/common/include/common.h"
 #include "common.h"
-#include "host_crypto.h"
-#include "pim_crypto.h"
+#include "crypto.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
