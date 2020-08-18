@@ -14,13 +14,15 @@ echo "Tasklets,DPUs,Operation,Data size,Allocation time,Loading time,Data" \
 " out,Free DPUs,Performance count min, max, average" > $data_file
 
 dpus=64
-data_per_dpu=128
 
-while [ $data_per_dpu -lt $((2 << 26)) ]
+make experiment  > /dev/null
+for operation in encrypt decrypt;
 do
-	echo "Testing with $data_per_dpu bytes per DPU across $dpus DPUs..."
-	make experiment  > /dev/null
-	./experiment/pimcrypto $(($dpus * $data_per_dpu)) $dpus >> $data_file
-	data_per_dpu=$(($data_per_dpu * 2))
+	data_per_dpu=16
+        while [ $data_per_dpu -lt $((2 << 26)) ]
+        do
+        	echo "Testing $operation with $data_per_dpu bytes per DPU across $dpus DPUs..."
+        	./experiment/pimcrypto dpu $dpus $operation $(($dpus * $data_per_dpu)) >> $data_file
+        	data_per_dpu=$(($data_per_dpu * 2))
+	done
 done
-
