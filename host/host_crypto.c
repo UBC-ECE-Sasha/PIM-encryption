@@ -30,7 +30,7 @@ int host_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
 
   // TODO: add a cycle count
   // Operation, Data size, Execution time
-  MEASURE("%d,%ld,%f\n", operation, length, execution_time);
+  MEASURE("%d,%ld,%.12f\n", operation, length, execution_time);
 
   DEBUG("%sed %ld bytes in %fs\n",
         (operation == OP_ENCRYPT) ? "Encrypt" : "Decrypt", length,

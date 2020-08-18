@@ -61,7 +61,7 @@ int aesni_AES_ecb(void *in, void *out, unsigned long length,
 
   // TODO: add a cycle count
   // Operation, Data size, Execution time
-  MEASURE("%d,%ld,%f\n", operation, length, execution_time);
+  MEASURE("%d,%ld,%.12f\n", operation, length, execution_time);
 
   DEBUG("%sed %ld bytes in %fs\n", (operation == 1) ? "Encrypt" : "Decrypt",
         length, execution_time);

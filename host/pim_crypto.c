@@ -159,7 +159,7 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
     times_adjusted[i] = TIME_DIFFERENCE(times[i-1], times[i]);
   }
 
-  MEASURE("%d,%d,%d,%ld,%f,%f,%f,%f,%f,%f,%f,%f,%s,%ld,%ld,%ld\n", NR_TASKLETS,
+  MEASURE("%d,%d,%d,%ld,%.12f,%.12f,%.12f,%.12f,%.12f,%.12f,%.12f,%.12f,%s,%ld,%ld,%ld\n", NR_TASKLETS,
           nr_of_dpus, operation, length, times_adjusted[1], times_adjusted[2],
           times_adjusted[3], times_adjusted[4], times_adjusted[5],
           times_adjusted[6], times_adjusted[7], times_adjusted[8],
