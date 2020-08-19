@@ -6,6 +6,21 @@
 #include <stdio.h>
 #include <time.h>
 
+/* Returns the necessary buffer size for a certain amount of data and number of DPUs
+ *
+ * We need to copy equal-sized buffers to and from each DPU, so this calculates the nearest size which fits the data and has some padding at the end to fit equal-sized buffers.
+ */
+unsigned long get_pim_buffer_size(unsigned long length, unsigned int nr_of_dpus) {
+  unsigned long blocks = length / AES_BLOCK_SIZE_BYTES;
+  unsigned long blocks_per_dpu = (blocks + nr_of_dpus - 1) / nr_of_dpus; // ceil(blocks / nr_of_dpus)
+  return blocks_per_dpu * nr_of_dpus * AES_BLOCK_SIZE_BYTES;
+}
+
+/*
+ * Encrypt or decrypt a buffer using AES-ECB on PIM
+ *
+ * in and out must be at least get_pim_buffer_size(length, nr_of_dpus) long - this function assumes that the necessary padding is present so that equally sized buffers can be copied to each DPU without allocating new buffers.
+ */
 int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
                 int operation, unsigned int nr_of_dpus) {
 
@@ -30,22 +45,11 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
   clock_gettime(CLOCK_MONOTONIC_RAW, times+1); // DPUs allocated
 
   DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &nr_of_dpus));
-  int data_per_dpu = length / nr_of_dpus;
+
+  int data_per_dpu = get_pim_buffer_size(length, nr_of_dpus) / nr_of_dpus;
 
   if (data_per_dpu > MRAM_SIZE) { // More data than will fit in MRAM
     ERROR("Data does not fit in MRAM (%ld bytes into %d DPUs)\n", length, nr_of_dpus);
-    DPU_ASSERT(dpu_free(dpu_set));
-    return -1;
-  }
-
-  if (data_per_dpu % AES_BLOCK_SIZE_BYTES != 0) { // Some blocks are not whole
-    ERROR("Length is not a multiple of block size when split across %d DPUs\n", nr_of_dpus);
-    DPU_ASSERT(dpu_free(dpu_set));
-    return -1;
-  }
-
-  if (length % data_per_dpu != 0) { // Data does not fit evenly onto DPUs
-    ERROR("%ld bytes cannot be split evenly across %d DPUs\n", length, nr_of_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }

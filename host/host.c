@@ -146,6 +146,8 @@ int main(int argc, const char *argv[]) {
     // upmemcloud1, which can't fit two 32GB buffers because it only has
     // 64GB of non-PIM memory
     buffer = malloc(test_data_size + GIGABYTE(1));
+  } else if (mode == PIM_MODE) {
+    buffer = malloc(get_pim_buffer_size(test_data_size, nr_of_dpus));
   } else {
     buffer = malloc(test_data_size);
   }

@@ -6,6 +6,8 @@
 
 #define MIN_CHUNK_SIZE (2 << 20)
 
+unsigned long get_pim_buffer_size(unsigned long length, unsigned int nr_of_dpus);
+
 int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
                 int operation, unsigned int nr_of_dpus);
 int host_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
