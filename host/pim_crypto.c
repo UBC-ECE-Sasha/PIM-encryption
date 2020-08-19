@@ -30,21 +30,21 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
   clock_gettime(CLOCK_MONOTONIC_RAW, times+1); // DPUs allocated
 
   DPU_ASSERT(dpu_get_nr_dpus(dpu_set, &nr_of_dpus));
-  int chunk_size = length / nr_of_dpus;
+  int data_per_dpu = length / nr_of_dpus;
 
-  if (chunk_size > MRAM_SIZE) { // More data than will fit in MRAM
+  if (data_per_dpu > MRAM_SIZE) { // More data than will fit in MRAM
     ERROR("Data does not fit in MRAM (%ld bytes into %d DPUs)\n", length, nr_of_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
 
-  if (chunk_size % AES_BLOCK_SIZE_BYTES != 0) { // Some blocks are not whole
+  if (data_per_dpu % AES_BLOCK_SIZE_BYTES != 0) { // Some blocks are not whole
     ERROR("Length is not a multiple of block size when split across %d DPUs\n", nr_of_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
   }
 
-  if (length % chunk_size != 0) { // Data does not fit evenly onto DPUs
+  if (length % data_per_dpu != 0) { // Data does not fit evenly onto DPUs
     ERROR("%ld bytes cannot be split evenly across %d DPUs\n", length, nr_of_dpus);
     DPU_ASSERT(dpu_free(dpu_set));
     return -1;
@@ -69,20 +69,20 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
     DPU_ASSERT(dpu_prepare_xfer(dpu, in + offset));
 #else
     DPU_ASSERT(
-        dpu_copy_to(dpu, XSTR(DPU_DATA_BUFFER), 0, in + offset, chunk_size));
+        dpu_copy_to(dpu, XSTR(DPU_DATA_BUFFER), 0, in + offset, data_per_dpu));
 #endif
 
-    offset += chunk_size;
+    offset += data_per_dpu;
   }
 
 #ifndef NOBULK
-  dpu_push_xfer(dpu_set, DPU_XFER_TO_DPU, XSTR(DPU_DATA_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
+  dpu_push_xfer(dpu_set, DPU_XFER_TO_DPU, XSTR(DPU_DATA_BUFFER), 0, data_per_dpu, DPU_XFER_DEFAULT);
 #endif
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times+3); // Data transferred to DPUs
 
   DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(DPU_KEY_BUFFER), 0, key_ptr, DPU_KEY_BUFFER_SIZE));
-  DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(DPU_LENGTH_BUFFER), 0, &chunk_size, sizeof(chunk_size)));
+  DPU_ASSERT(dpu_copy_to(dpu_set, XSTR(DPU_LENGTH_BUFFER), 0, &data_per_dpu, sizeof(data_per_dpu)));
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times+4); // Key and data size copied to DPUs
 
@@ -105,14 +105,14 @@ int dpu_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
     DPU_ASSERT(dpu_prepare_xfer(dpu, out + offset));
 #else
     DPU_ASSERT(
-        dpu_copy_from(dpu, XSTR(DPU_DATA_BUFFER), 0, out + offset, chunk_size));
+        dpu_copy_from(dpu, XSTR(DPU_DATA_BUFFER), 0, out + offset, data_per_dpu));
 #endif
 
-    offset += chunk_size;
+    offset += data_per_dpu;
   }
 
 #ifndef NOBULK
-  dpu_push_xfer(dpu_set, DPU_XFER_FROM_DPU, XSTR(DPU_DATA_BUFFER), 0, chunk_size, DPU_XFER_DEFAULT);
+  dpu_push_xfer(dpu_set, DPU_XFER_FROM_DPU, XSTR(DPU_DATA_BUFFER), 0, data_per_dpu, DPU_XFER_DEFAULT);
 #endif
 
   clock_gettime(CLOCK_MONOTONIC_RAW, times+6); // Encrypted data copied from DPUs
