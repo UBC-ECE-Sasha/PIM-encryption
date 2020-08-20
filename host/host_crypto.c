@@ -13,20 +13,26 @@ int host_AES_ecb(void *in, void *out, unsigned long length, const void *key_ptr,
 
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
-  switch (operation) {
-  case OP_ENCRYPT:
-    host_AES_ecb_encrypt(in, out, length, key_ptr);
-    break;
-  case OP_DECRYPT:
-    host_AES_ecb_decrypt(in, out, length, key_ptr);
-    break;
-  default:
-    return 1;
-  }
+  int nr_repetitions = (MEGABYTE(256) + length - 1) /
+                       length; // This aims to have each execution take at least
+                               // 1s, with more repetitions for smaller numbers
+                               // that tend to have less precision
 
+  for (int i = 0; i < nr_repetitions; i++) {
+    switch (operation) {
+    case OP_ENCRYPT:
+      host_AES_ecb_encrypt(in, out, length, key_ptr);
+      break;
+    case OP_DECRYPT:
+      host_AES_ecb_decrypt(in, out, length, key_ptr);
+      break;
+    default:
+      return 1;
+    }
+  }
   clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 
-  double execution_time = TIME_DIFFERENCE(start, end);
+  double execution_time = TIME_DIFFERENCE(start, end) / nr_repetitions;
 
   // TODO: add a cycle count
   // Operation, Data size, Execution time
